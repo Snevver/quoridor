@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -19,6 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'slug',
         'email',
         'password',
         'elo',
@@ -37,6 +39,28 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            $user->slug = $user->slug ?: static::generateSlug($user->name);
+        });
+    }
+
+    /** Unique, URL-safe handle derived from the display name. */
+    public static function generateSlug(string $name): string
+    {
+        $base = Str::slug($name) ?: 'player';
+        $slug = $base;
+        $i = 2;
+
+        while (static::where('slug', $slug)->exists()) {
+            $slug = "{$base}-{$i}";
+            $i++;
+        }
+
+        return $slug;
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -267,6 +267,18 @@ class GameService
         $game->player1->update(['elo' => $ratings['a'], 'games_played' => $game->player1->games_played + 1]);
         $game->player2->update(['elo' => $ratings['b'], 'games_played' => $game->player2->games_played + 1]);
         $winner->increment('games_won');
+
+        $this->archiveMoves($game);
+    }
+
+    /**
+     * Finished games keep only the move total; the move rows themselves
+     * would bloat the database forever.
+     */
+    public function archiveMoves(Game $game): void
+    {
+        $game->update(['move_count' => $game->moves()->count()]);
+        $game->moves()->delete();
     }
 
     private function inBounds(int $x, int $y): bool

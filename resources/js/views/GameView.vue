@@ -122,7 +122,7 @@ const playerCards = computed(() => {
             </div>
         </div>
 
-        <main v-else class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-8 pb-10
+        <main v-else class="flex-1 w-full max-w-6xl 2xl:max-w-[88rem] mx-auto px-4 sm:px-8 pb-10
                             flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8">
             <!-- side panel -->
             <aside class="w-full lg:w-[300px] space-y-4 order-2 lg:order-1 rise" style="--d: 0.1s">

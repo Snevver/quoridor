@@ -17,6 +17,7 @@ class Game extends Model
         'current_turn',
         'status',
         'winner_id',
+        'move_count',
         'p1_elo_before',
         'p2_elo_before',
         'p1_elo_after',

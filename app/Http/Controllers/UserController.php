@@ -13,13 +13,13 @@ class UserController extends Controller
         return response()->json([
             'players' => User::orderByDesc('elo')
                 ->limit(10)
-                ->get(['id', 'name', 'elo', 'games_played', 'games_won']),
+                ->get(['id', 'slug', 'name', 'elo', 'games_played', 'games_won']),
         ]);
     }
 
     public function show(User $user): JsonResponse
     {
-        $recentGames = Game::with(['player1:id,name', 'player2:id,name'])
+        $recentGames = Game::with(['player1:id,slug,name', 'player2:id,slug,name'])
             ->where('status', 'finished')
             ->where(fn ($q) => $q->where('player1_id', $user->id)->orWhere('player2_id', $user->id))
             ->latest('updated_at')
@@ -32,7 +32,7 @@ class UserController extends Controller
 
                 return [
                     'id' => $game->id,
-                    'opponent' => ($role === 'p1' ? $game->player2 : $game->player1)->only('id', 'name'),
+                    'opponent' => ($role === 'p1' ? $game->player2 : $game->player1)->only('id', 'slug', 'name'),
                     'won' => $game->winner_id === $user->id,
                     'voided' => $game->winner_id === null,
                     'elo_change' => $after !== null && $before !== null ? $after - $before : 0,
@@ -41,7 +41,7 @@ class UserController extends Controller
             });
 
         return response()->json([
-            'user' => $user->only('id', 'name', 'elo', 'games_played', 'games_won', 'is_admin', 'created_at'),
+            'user' => $user->only('id', 'slug', 'name', 'elo', 'games_played', 'games_won', 'is_admin', 'created_at'),
             'recent_games' => $recentGames,
         ]);
     }

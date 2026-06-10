@@ -22,7 +22,8 @@ class AdminController extends Controller
             'games_total' => Game::count(),
             'games_active' => Game::where('status', 'active')->count(),
             'games_today' => Game::whereDate('created_at', today())->count(),
-            'moves_total' => GameMove::count(),
+            // Finished games only keep their move total; live moves still sit in game_moves.
+            'moves_total' => (int) Game::sum('move_count') + GameMove::count(),
             'in_queue' => MatchmakingQueue::count(),
         ]);
     }
@@ -78,6 +79,13 @@ class AdminController extends Controller
             ->latest()
             ->paginate(12);
 
+        // Finished games no longer have move rows — surface the stored total instead.
+        $games->getCollection()->transform(function (Game $game) {
+            $game->moves_count = max($game->moves_count, $game->move_count);
+
+            return $game;
+        });
+
         return response()->json($games);
     }
 
@@ -112,6 +120,8 @@ class AdminController extends Controller
                 'p1_elo_after' => $game->p1_elo_before,
                 'p2_elo_after' => $game->p2_elo_before,
             ]);
+
+            $gameService->archiveMoves($game);
         } else {
             $gameService->finishGame($game, $data['result']);
         }

@@ -34,11 +34,12 @@ class ProfileTest extends TestCase
         ]);
 
         $response = $this->actingAs($bob)
-            ->getJson("/api/users/{$alice->id}")
+            ->getJson("/api/users/{$alice->slug}")
             ->assertOk()
             ->json();
 
         $this->assertSame($alice->name, $response['user']['name']);
+        $this->assertSame($alice->slug, $response['user']['slug']);
         $this->assertSame(1216, $response['user']['elo']);
         $this->assertArrayNotHasKey('email', $response['user']);
 
@@ -48,7 +49,7 @@ class ProfileTest extends TestCase
         $this->assertSame($bob->name, $response['recent_games'][0]['opponent']['name']);
 
         // Bob's own profile shows the loss from his perspective.
-        $bobView = $this->actingAs($alice)->getJson("/api/users/{$bob->id}")->json();
+        $bobView = $this->actingAs($alice)->getJson("/api/users/{$bob->slug}")->json();
         $this->assertFalse($bobView['recent_games'][0]['won']);
         $this->assertSame(-16, $bobView['recent_games'][0]['elo_change']);
     }
@@ -57,6 +58,23 @@ class ProfileTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->getJson("/api/users/{$user->id}")->assertUnauthorized();
+        $this->getJson("/api/users/{$user->slug}")->assertUnauthorized();
+    }
+
+    public function test_profile_is_not_addressable_by_id(): void
+    {
+        $alice = User::factory()->create();
+        $bob = User::factory()->create();
+
+        $this->actingAs($alice)->getJson("/api/users/{$bob->id}")->assertNotFound();
+    }
+
+    public function test_users_get_unique_slugs_from_their_name(): void
+    {
+        $first = User::factory()->create(['name' => 'Wall Master']);
+        $second = User::factory()->create(['name' => 'Wall-Master']);
+
+        $this->assertSame('wall-master', $first->slug);
+        $this->assertSame('wall-master-2', $second->slug);
     }
 }

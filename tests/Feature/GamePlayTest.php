@@ -112,6 +112,10 @@ class GamePlayTest extends TestCase
         $this->assertSame(1, $this->alice->games_won);
         $this->assertSame(1, $this->bob->games_played);
         $this->assertSame(0, $this->bob->games_won);
+
+        // Only the move total survives — the moves themselves are purged.
+        $this->assertSame(15, $this->game->move_count);
+        $this->assertDatabaseCount('game_moves', 0);
     }
 
     public function test_no_moves_accepted_after_game_ends(): void

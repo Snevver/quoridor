@@ -91,7 +91,7 @@ const medals = ['🥇', '🥈', '🥉'];
                     ⌖ Command deck
                 </router-link>
                 <router-link
-                    :to="{ name: 'profile', params: { id: auth.user.id } }"
+                    :to="{ name: 'profile', params: { slug: auth.user.slug } }"
                     class="glass rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2.5 hover:shadow-glow-p1 transition-shadow"
                     title="View your profile"
                 >
@@ -107,16 +107,17 @@ const medals = ['🥇', '🥈', '🥉'];
             </div>
         </header>
 
-        <main class="flex-1 w-full max-w-6xl mx-auto px-5 sm:px-10 pb-14 grid lg:grid-cols-[1fr_380px] gap-8 items-start">
+        <main class="flex-1 w-full max-w-6xl 2xl:max-w-[88rem] mx-auto px-5 sm:px-10 pb-14 grid lg:grid-cols-[1fr_380px] gap-8 items-start">
             <!-- left: hero / queue -->
             <section class="glass rounded-3xl p-5 sm:p-12 flex flex-col items-center text-center rise min-w-0" style="--d: 0.12s">
                 <EloDisplay :elo="auth.user.elo" />
 
                 <!-- rank ladder -->
-                <div v-if="ranks.ranks.length" class="w-full max-w-md mt-8 min-w-0">
+                <div v-if="ranks.ranks.length" class="w-full max-w-md lg:max-w-2xl mt-8 min-w-0">
                     <div class="font-mono text-[9px] uppercase tracking-[0.35em] text-dim mb-3">rank ladder</div>
-                    <!-- auto-fit wraps the ladder onto multiple rows on narrow screens -->
-                    <div class="grid gap-1.5" style="grid-template-columns: repeat(auto-fit, minmax(68px, 1fr))">
+                    <!-- auto-fit wraps the ladder onto multiple rows on narrow screens;
+                         84px columns fit long rank names like GRANDMASTER untruncated -->
+                    <div class="grid gap-1.5" style="grid-template-columns: repeat(auto-fit, minmax(84px, 1fr))">
                         <div
                             v-for="rank in ranks.ranks"
                             :key="rank.id"
@@ -192,7 +193,7 @@ const medals = ['🥇', '🥈', '🥉'];
                     <router-link
                         v-for="(player, i) in leaderboard"
                         :key="player.id"
-                        :to="{ name: 'profile', params: { id: player.id } }"
+                        :to="{ name: 'profile', params: { slug: player.slug } }"
                         custom
                         v-slot="{ navigate }"
                     >

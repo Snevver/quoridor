@@ -9,11 +9,35 @@ export const useMatchmakingStore = defineStore('matchmaking', {
         inQueue: false,
         waitingSeconds: 0,
         matchedGame: null,   // game payload shown in the MATCH FOUND splash
+        handledSlug: null,   // last game the splash was shown for — never replay it
         pollTimer: null,
         listening: false,
     }),
 
     actions: {
+        /**
+         * Single entry point for a found match. The WebSocket event and the
+         * status poll can both report the same game (and in either order), so
+         * the splash is deduped by slug.
+         */
+        async handleMatch(slug, onMatched) {
+            this.stopPolling();
+            this.inQueue = false;
+
+            if (!slug || this.handledSlug === slug) return;
+            this.handledSlug = slug;
+            sfx.match();
+
+            try {
+                const { data } = await axios.get(`/api/games/${slug}`);
+                this.matchedGame = data;
+            } catch {
+                this.matchedGame = { slug };
+            }
+
+            onMatched?.(this.matchedGame);
+        },
+
         /** Listen on the private user channel for GameStarted. */
         listenForMatches(onMatched) {
             const auth = useAuthStore();
@@ -22,20 +46,7 @@ export const useMatchmakingStore = defineStore('matchmaking', {
 
             getEcho()
                 .private(`App.Models.User.${auth.user.id}`)
-                .listen('GameStarted', async ({ slug }) => {
-                    this.stopPolling();
-                    this.inQueue = false;
-                    sfx.match();
-
-                    try {
-                        const { data } = await axios.get(`/api/games/${slug}`);
-                        this.matchedGame = data;
-                    } catch {
-                        this.matchedGame = { slug };
-                    }
-
-                    onMatched?.(this.matchedGame);
-                });
+                .listen('GameStarted', ({ slug }) => this.handleMatch(slug, onMatched));
         },
 
         stopListening() {
@@ -47,10 +58,21 @@ export const useMatchmakingStore = defineStore('matchmaking', {
         },
 
         async join() {
-            await axios.post('/api/matchmaking/join');
+            // Optimistic: joining can match instantly, in which case the
+            // GameStarted event lands before this POST even resolves. The
+            // match handler flips inQueue back off; respect that here so we
+            // never poll for a queue we already left.
             this.inQueue = true;
             this.waitingSeconds = 0;
-            this.startPolling();
+
+            try {
+                await axios.post('/api/matchmaking/join');
+            } catch (error) {
+                this.inQueue = false;
+                throw error;
+            }
+
+            if (this.inQueue) this.startPolling();
         },
 
         async leave() {
@@ -69,10 +91,7 @@ export const useMatchmakingStore = defineStore('matchmaking', {
 
                     if (!data.in_queue && data.active_game_slug && this.inQueue) {
                         // WebSocket missed the event (e.g. brief disconnect) — recover.
-                        this.inQueue = false;
-                        this.stopPolling();
-                        const { data: game } = await axios.get(`/api/games/${data.active_game_slug}`);
-                        this.matchedGame = game;
+                        await this.handleMatch(data.active_game_slug);
                     } else if (!data.in_queue && this.inQueue) {
                         // Removed server-side (e.g. by an admin) — stop searching.
                         this.inQueue = false;

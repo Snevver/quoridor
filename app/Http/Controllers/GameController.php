@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\GameStateUpdated;
 use App\Http\Requests\MakeMoveRequest;
 use App\Models\Game;
+use App\Models\GameMove;
 use App\Services\GameService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,10 +25,22 @@ class GameController extends Controller
 
     public function move(MakeMoveRequest $request, Game $game): JsonResponse
     {
-        $this->gameService->applyMove($game, $request->user(), $request->validated());
+        $validated = $request->validated();
+        $this->gameService->applyMove($game, $request->user(), $validated);
 
         $game->refresh();
-        rescue(fn () => broadcast(new GameStateUpdated($game, $game->moves()->latest('move_number')->first())));
+
+        // A finishing move is purged with the rest of the game's moves, so
+        // rebuild it from the request for the broadcast payload.
+        $lastMove = $game->moves()->latest('move_number')->first() ?? new GameMove([
+            'player_id' => $request->user()->id,
+            'move_type' => $validated['move_type'],
+            'payload' => $validated['move_type'] === 'pawn'
+                ? ['to' => [(int) $validated['to'][0], (int) $validated['to'][1]]]
+                : ['x' => (int) $validated['x'], 'y' => (int) $validated['y'], 'orientation' => $validated['orientation']],
+        ]);
+
+        rescue(fn () => broadcast(new GameStateUpdated($game, $lastMove)));
 
         return response()->json($this->serialize($game, $request));
     }

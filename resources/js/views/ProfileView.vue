@@ -24,7 +24,7 @@ async function load() {
     profile.value = null;
     failed.value = false;
     try {
-        profile.value = (await axios.get(`/api/users/${route.params.id}`)).data;
+        profile.value = (await axios.get(`/api/users/${route.params.slug}`)).data;
     } catch {
         failed.value = true;
     }
@@ -37,7 +37,7 @@ function fmtDate(iso, withTime = false) {
     });
 }
 
-watch(() => route.params.id, () => route.name === 'profile' && load());
+watch(() => route.params.slug, () => route.name === 'profile' && load());
 
 onMounted(() => {
     ranks.fetch();
@@ -111,7 +111,7 @@ onMounted(() => {
                         </span>
                         <span class="flex-1 text-sm truncate">
                             vs
-                            <router-link :to="{ name: 'profile', params: { id: match.opponent.id } }"
+                            <router-link :to="{ name: 'profile', params: { slug: match.opponent.slug } }"
                                          class="font-medium text-ink hover:text-p1-bright transition-colors">
                                 {{ match.opponent.name }}
                             </router-link>

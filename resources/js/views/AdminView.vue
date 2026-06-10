@@ -85,11 +85,11 @@ async function inspect(game) {
         inspected.value = null;
         return;
     }
-    inspected.value = (await axios.get(`/api/admin/games/${game.id}`)).data;
+    inspected.value = (await axios.get(`/api/admin/games/${game.slug}`)).data;
 }
 
 async function endGame(game, result) {
-    await axios.post(`/api/admin/games/${game.id}/end`, { result });
+    await axios.post(`/api/admin/games/${game.slug}/end`, { result });
     inspected.value = null;
     await Promise.all([loadGames(games.value.current_page), loadStats()]);
 }

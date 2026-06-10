@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Game extends Model
 {
     protected $fillable = [
+        'slug',
         'player1_id',
         'player2_id',
         'board_state',
@@ -24,6 +26,24 @@ class Game extends Model
     protected $casts = [
         'board_state' => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Game $game) {
+            while (!$game->slug) {
+                $candidate = Str::lower(Str::random(10));
+                if (!static::where('slug', $candidate)->exists()) {
+                    $game->slug = $candidate;
+                }
+            }
+        });
+    }
+
+    /** Games are addressed by slug in URLs, never by numeric id. */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     public function player1(): BelongsTo
     {

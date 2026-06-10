@@ -108,8 +108,10 @@ class AdminTest extends TestCase
     {
         $game = $this->makeGame();
 
+        $this->assertNotNull($game->slug);
+
         $this->actingAs($this->admin)
-            ->postJson("/api/admin/games/{$game->id}/end", ['result' => 'p2'])
+            ->postJson("/api/admin/games/{$game->slug}/end", ['result' => 'p2'])
             ->assertOk();
 
         $game->refresh();
@@ -125,7 +127,7 @@ class AdminTest extends TestCase
         $eloBefore = $this->player->fresh()->elo;
 
         $this->actingAs($this->admin)
-            ->postJson("/api/admin/games/{$game->id}/end", ['result' => 'void'])
+            ->postJson("/api/admin/games/{$game->slug}/end", ['result' => 'void'])
             ->assertOk();
 
         $game->refresh();

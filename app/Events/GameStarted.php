@@ -29,6 +29,7 @@ class GameStarted implements ShouldBroadcastNow
     {
         return [
             'game_id' => $this->game->id,
+            'slug' => $this->game->slug,
         ];
     }
 }

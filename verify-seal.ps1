@@ -30,7 +30,7 @@ Invoke-Api $b Post '/api/register' @{ name = "SealB$stamp"; email = "sb$stamp@t.
 Invoke-Api $a Post '/api/matchmaking/join' @{} | Out-Null
 Invoke-Api $b Post '/api/matchmaking/join' @{} | Out-Null
 Start-Sleep -Seconds 1
-$gameId = (Invoke-Api $a Get '/api/matchmaking/status').active_game_id
+$gameId = (Invoke-Api $a Get '/api/matchmaking/status').active_game_slug
 $game = Invoke-Api $a Get "/api/games/$gameId"
 if ($game.my_role -eq 'p1') { $p1 = $a; $p2 = $b } else { $p1 = $b; $p2 = $a }
 Write-Output "game $gameId started"

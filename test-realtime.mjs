@@ -70,15 +70,16 @@ console.log(`registered: A=${a.user.id} B=${b.user.id}`);
 await a.request('POST', '/api/matchmaking/join');
 await b.request('POST', '/api/matchmaking/join');
 
-let gameId = null;
-for (let i = 0; i < 15 && !gameId; i++) {
+let gameSlug = null;
+for (let i = 0; i < 15 && !gameSlug; i++) {
     await wait(1000);
-    gameId = (await a.request('GET', '/api/matchmaking/status')).active_game_id;
+    gameSlug = (await a.request('GET', '/api/matchmaking/status')).active_game_slug;
 }
-if (!gameId) throw new Error('matchmaking failed');
-console.log(`matched: game ${gameId}`);
+if (!gameSlug) throw new Error('matchmaking failed');
+console.log(`matched: game ${gameSlug}`);
 
-const game = await a.request('GET', `/api/games/${gameId}`);
+const game = await a.request('GET', `/api/games/${gameSlug}`);
+const gameId = game.id; // presence channel stays keyed by numeric id
 const mover = game.my_role === 'p1' ? a : b;
 const watcher = mover === a ? b : a;
 

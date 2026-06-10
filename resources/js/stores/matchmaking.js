@@ -22,16 +22,16 @@ export const useMatchmakingStore = defineStore('matchmaking', {
 
             getEcho()
                 .private(`App.Models.User.${auth.user.id}`)
-                .listen('GameStarted', async ({ game_id }) => {
+                .listen('GameStarted', async ({ slug }) => {
                     this.stopPolling();
                     this.inQueue = false;
                     sfx.match();
 
                     try {
-                        const { data } = await axios.get(`/api/games/${game_id}`);
+                        const { data } = await axios.get(`/api/games/${slug}`);
                         this.matchedGame = data;
                     } catch {
-                        this.matchedGame = { id: game_id };
+                        this.matchedGame = { slug };
                     }
 
                     onMatched?.(this.matchedGame);
@@ -67,11 +67,11 @@ export const useMatchmakingStore = defineStore('matchmaking', {
                     const { data } = await axios.get('/api/matchmaking/status');
                     this.waitingSeconds = data.waiting_seconds;
 
-                    if (!data.in_queue && data.active_game_id && this.inQueue) {
+                    if (!data.in_queue && data.active_game_slug && this.inQueue) {
                         // WebSocket missed the event (e.g. brief disconnect) — recover.
                         this.inQueue = false;
                         this.stopPolling();
-                        const { data: game } = await axios.get(`/api/games/${data.active_game_id}`);
+                        const { data: game } = await axios.get(`/api/games/${data.active_game_slug}`);
                         this.matchedGame = game;
                     } else if (!data.in_queue && this.inQueue) {
                         // Removed server-side (e.g. by an admin) — stop searching.

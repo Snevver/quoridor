@@ -49,15 +49,15 @@ Invoke-Api $a Post '/api/matchmaking/join' @{} | Out-Null
 Invoke-Api $b Post '/api/matchmaking/join' @{} | Out-Null
 Write-Output 'QUEUE: both joined'
 
-# 3. Wait for the queue worker to pair them
+# 3. Wait for matchmaking to pair them
 $gameId = $null
 foreach ($i in 1..15) {
     Start-Sleep -Seconds 1
     $status = Invoke-Api $a Get '/api/matchmaking/status'
-    if ($status.active_game_id) { $gameId = $status.active_game_id; break }
+    if ($status.active_game_slug) { $gameId = $status.active_game_slug; break }
 }
 if (-not $gameId) { throw 'MATCHMAKING FAILED: no game created after 15s' }
-Write-Output "MATCHED: game id $gameId"
+Write-Output "MATCHED: game slug $gameId"
 
 # 4. Load the game from both sides
 $gameA = Invoke-Api $a Get "/api/games/$gameId"

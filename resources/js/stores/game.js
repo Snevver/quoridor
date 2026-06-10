@@ -30,10 +30,10 @@ export const useGameStore = defineStore('game', {
     },
 
     actions: {
-        async joinGame(gameId) {
+        async joinGame(slug) {
             this.reset();
 
-            const { data } = await axios.get(`/api/games/${gameId}`);
+            const { data } = await axios.get(`/api/games/${slug}`);
             this.game = data;
             this.boardState = data.board_state;
             this.myRole = data.my_role;
@@ -42,7 +42,7 @@ export const useGameStore = defineStore('game', {
                 this.eloResult = data.elo;
             }
 
-            this.subscribeToChannel(gameId);
+            this.subscribeToChannel(data.id);
             await this.refreshLegalMoves();
         },
 
@@ -89,7 +89,7 @@ export const useGameStore = defineStore('game', {
                 return;
             }
             try {
-                const { data } = await axios.get(`/api/games/${this.game.id}/legal-moves`);
+                const { data } = await axios.get(`/api/games/${this.game.slug}/legal-moves`);
                 this.legalMoves = data.moves;
             } catch {
                 this.legalMoves = [];
@@ -134,7 +134,7 @@ export const useGameStore = defineStore('game', {
         async send(payload, snapshot) {
             this.submitting = true;
             try {
-                const { data } = await axios.post(`/api/games/${this.game.id}/move`, payload);
+                const { data } = await axios.post(`/api/games/${this.game.slug}/move`, payload);
                 this.boardState = data.board_state;
 
                 if (data.status === 'finished') {
@@ -152,7 +152,7 @@ export const useGameStore = defineStore('game', {
 
         async resign() {
             if (!this.game || this.isFinished) return;
-            const { data } = await axios.post(`/api/games/${this.game.id}/resign`);
+            const { data } = await axios.post(`/api/games/${this.game.slug}/resign`);
             this.boardState = data.board_state;
             this.eloResult = data.elo;
             this.onGameFinished();

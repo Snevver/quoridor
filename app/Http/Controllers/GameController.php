@@ -59,6 +59,7 @@ class GameController extends Controller
     {
         return [
             'id' => $game->id,
+            'slug' => $game->slug,
             'board_state' => $game->board_state,
             'status' => $game->status,
             'my_role' => $game->roleOf($request->user()),

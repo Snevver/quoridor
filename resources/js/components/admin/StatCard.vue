@@ -34,8 +34,8 @@ const accentClass = {
 </script>
 
 <template>
-    <div class="glass rounded-2xl px-4 py-4 text-center">
+    <div class="glass rounded-2xl px-2 py-4 text-center min-w-0">
         <div class="font-display font-bold text-2xl tabular-nums" :class="accentClass[accent]">{{ shown }}</div>
-        <div class="font-mono text-[9px] uppercase tracking-[0.25em] text-dim mt-1.5">{{ label }}</div>
+        <div class="font-mono text-[9px] uppercase tracking-[0.2em] text-dim mt-1.5 truncate">{{ label }}</div>
     </div>
 </template>

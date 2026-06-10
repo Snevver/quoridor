@@ -1,12 +1,11 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 import { useMatchmakingStore } from '@/stores/matchmaking';
 import { useRanksStore } from '@/stores/ranks';
 import EloDisplay from '@/components/ui/EloDisplay.vue';
-import MatchFoundOverlay from '@/components/ui/MatchFoundOverlay.vue';
 
 const auth = useAuthStore();
 const matchmaking = useMatchmakingStore();
@@ -14,7 +13,7 @@ const ranks = useRanksStore();
 const router = useRouter();
 
 const leaderboard = ref([]);
-const activeGameId = ref(null);
+const activeGameSlug = ref(null);
 const queueTimer = ref(0);
 let ticker = null;
 
@@ -47,16 +46,6 @@ async function logout() {
     router.push({ name: 'login' });
 }
 
-watch(() => matchmaking.matchedGame, (game) => {
-    if (!game) return;
-    clearInterval(ticker);
-    setTimeout(() => {
-        const id = game.id;
-        matchmaking.clearMatch();
-        router.push({ name: 'game', params: { id } });
-    }, 2400);
-});
-
 onMounted(async () => {
     matchmaking.listenForMatches();
     ranks.fetch();
@@ -69,7 +58,7 @@ onMounted(async () => {
     // Offer to resume if a live game already exists (e.g. after refresh).
     try {
         const { data } = await axios.get('/api/matchmaking/status');
-        activeGameId.value = data.active_game_id;
+        activeGameSlug.value = data.active_game_slug;
         if (data.in_queue) {
             matchmaking.inQueue = true;
             queueTimer.value = data.waiting_seconds;
@@ -88,8 +77,6 @@ const medals = ['🥇', '🥈', '🥉'];
 
 <template>
     <div class="min-h-screen flex flex-col">
-        <MatchFoundOverlay v-if="matchmaking.matchedGame" :game="matchmaking.matchedGame" :my-id="auth.user.id" />
-
         <!-- top bar -->
         <header class="flex items-center justify-between flex-wrap gap-3 px-5 sm:px-10 py-5 rise" style="--d: 0s">
             <h1 class="font-display font-black text-lg sm:text-xl tracking-[0.2em] title-gradient select-none">
@@ -122,17 +109,18 @@ const medals = ['🥇', '🥈', '🥉'];
 
         <main class="flex-1 w-full max-w-6xl mx-auto px-5 sm:px-10 pb-14 grid lg:grid-cols-[1fr_380px] gap-8 items-start">
             <!-- left: hero / queue -->
-            <section class="glass rounded-3xl p-8 sm:p-12 flex flex-col items-center text-center rise" style="--d: 0.12s">
+            <section class="glass rounded-3xl p-5 sm:p-12 flex flex-col items-center text-center rise min-w-0" style="--d: 0.12s">
                 <EloDisplay :elo="auth.user.elo" />
 
                 <!-- rank ladder -->
-                <div v-if="ranks.ranks.length" class="w-full max-w-md mt-8">
+                <div v-if="ranks.ranks.length" class="w-full max-w-md mt-8 min-w-0">
                     <div class="font-mono text-[9px] uppercase tracking-[0.35em] text-dim mb-3">rank ladder</div>
-                    <div class="grid gap-1.5" :style="{ gridTemplateColumns: `repeat(${ranks.ranks.length}, 1fr)` }">
+                    <!-- auto-fit wraps the ladder onto multiple rows on narrow screens -->
+                    <div class="grid gap-1.5" style="grid-template-columns: repeat(auto-fit, minmax(68px, 1fr))">
                         <div
                             v-for="rank in ranks.ranks"
                             :key="rank.id"
-                            class="rank-step rounded-xl py-2.5 px-1 text-center"
+                            class="rank-step rounded-xl py-2.5 px-1 text-center min-w-0"
                             :class="{ 'is-current': ranks.rankFor(auth.user.elo)?.id === rank.id }"
                             :style="{ '--rank-color': rank.color }"
                         >
@@ -147,18 +135,18 @@ const medals = ['🥇', '🥈', '🥉'];
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3 w-full max-w-sm mt-8 mb-10">
-                    <div class="glass rounded-2xl py-4">
-                        <div class="font-display font-bold text-2xl tabular-nums">{{ auth.user.games_played }}</div>
-                        <div class="font-mono text-[10px] uppercase tracking-[0.25em] text-dim mt-1">battles</div>
+                <div class="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm mt-8 mb-10 min-w-0">
+                    <div class="glass rounded-2xl py-4 px-1 min-w-0">
+                        <div class="font-display font-bold text-xl sm:text-2xl tabular-nums">{{ auth.user.games_played }}</div>
+                        <div class="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-dim mt-1 truncate">battles</div>
                     </div>
-                    <div class="glass rounded-2xl py-4">
-                        <div class="font-display font-bold text-2xl tabular-nums text-mint">{{ auth.user.games_won }}</div>
-                        <div class="font-mono text-[10px] uppercase tracking-[0.25em] text-dim mt-1">wins</div>
+                    <div class="glass rounded-2xl py-4 px-1 min-w-0">
+                        <div class="font-display font-bold text-xl sm:text-2xl tabular-nums text-mint">{{ auth.user.games_won }}</div>
+                        <div class="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-dim mt-1 truncate">wins</div>
                     </div>
-                    <div class="glass rounded-2xl py-4">
-                        <div class="font-display font-bold text-2xl tabular-nums text-gold">{{ winRate }}</div>
-                        <div class="font-mono text-[10px] uppercase tracking-[0.25em] text-dim mt-1">winrate</div>
+                    <div class="glass rounded-2xl py-4 px-1 min-w-0">
+                        <div class="font-display font-bold text-xl sm:text-2xl tabular-nums text-gold">{{ winRate }}</div>
+                        <div class="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-dim mt-1 truncate">winrate</div>
                     </div>
                 </div>
 
@@ -168,8 +156,8 @@ const medals = ['🥇', '🥈', '🥉'];
                         <span class="relative z-10">Find opponent</span>
                     </button>
                     <router-link
-                        v-if="activeGameId"
-                        :to="{ name: 'game', params: { id: activeGameId } }"
+                        v-if="activeGameSlug"
+                        :to="{ name: 'game', params: { slug: activeGameSlug } }"
                         class="btn-ghost block w-full rounded-2xl py-3.5 text-sm uppercase tracking-widest"
                     >
                         ⚔ Resume live match

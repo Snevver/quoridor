@@ -45,6 +45,7 @@ class MatchmakingController extends Controller
             'in_queue' => $entry !== null,
             'waiting_seconds' => $entry ? (int) abs(now()->diffInSeconds($entry->created_at)) : 0,
             'active_game_id' => $activeGame?->id,
+            'active_game_slug' => $activeGame?->slug,
         ]);
     }
 }

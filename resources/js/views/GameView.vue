@@ -54,7 +54,7 @@ function backToLobby() {
 onMounted(async () => {
     window.addEventListener('keydown', onKeydown);
     try {
-        await game.joinGame(route.params.id);
+        await game.joinGame(route.params.slug);
     } catch {
         failed.value = true;
     } finally {

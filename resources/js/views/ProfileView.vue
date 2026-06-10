@@ -81,18 +81,18 @@ onMounted(() => {
 
                 <div class="flex-1 flex flex-col items-center gap-6">
                     <EloDisplay :elo="user.elo" :size="150" />
-                    <div class="grid grid-cols-3 gap-3 w-full max-w-sm">
-                        <div class="glass rounded-2xl py-3.5 text-center">
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3 w-full max-w-sm min-w-0">
+                        <div class="glass rounded-2xl py-3.5 px-1 text-center min-w-0">
                             <div class="font-display font-bold text-xl tabular-nums">{{ user.games_played }}</div>
-                            <div class="font-mono text-[9px] uppercase tracking-[0.25em] text-dim mt-1">battles</div>
+                            <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dim mt-1 truncate">battles</div>
                         </div>
-                        <div class="glass rounded-2xl py-3.5 text-center">
+                        <div class="glass rounded-2xl py-3.5 px-1 text-center min-w-0">
                             <div class="font-display font-bold text-xl tabular-nums text-mint">{{ user.games_won }}</div>
-                            <div class="font-mono text-[9px] uppercase tracking-[0.25em] text-dim mt-1">wins</div>
+                            <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dim mt-1 truncate">wins</div>
                         </div>
-                        <div class="glass rounded-2xl py-3.5 text-center">
+                        <div class="glass rounded-2xl py-3.5 px-1 text-center min-w-0">
                             <div class="font-display font-bold text-xl tabular-nums text-gold">{{ winRate }}</div>
-                            <div class="font-mono text-[9px] uppercase tracking-[0.25em] text-dim mt-1">winrate</div>
+                            <div class="font-mono text-[9px] uppercase tracking-[0.15em] text-dim mt-1 truncate">winrate</div>
                         </div>
                     </div>
                 </div>

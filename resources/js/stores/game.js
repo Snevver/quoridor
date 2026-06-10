@@ -12,7 +12,6 @@ export const useGameStore = defineStore('game', {
         myRole: null,          // 'p1' | 'p2'
         legalMoves: [],
         pendingWall: null,     // { x, y, orientation, valid }
-        wallMode: false,       // false = move pawn, true = place walls
         lastMove: null,        // { player_id, move_type, payload }
         eloResult: null,       // { p1_before, p1_after, ... } once finished
         opponentOnline: false,
@@ -162,7 +161,6 @@ export const useGameStore = defineStore('game', {
         onGameFinished() {
             this.legalMoves = [];
             this.pendingWall = null;
-            this.wallMode = false;
             this.iWon ? sfx.win() : sfx.lose();
 
             // Sync the header / lobby ELO without a refetch round-trip.
@@ -188,11 +186,6 @@ export const useGameStore = defineStore('game', {
 
         clearPreview() {
             this.pendingWall = null;
-        },
-
-        setWallMode(on) {
-            this.wallMode = on;
-            if (!on) this.pendingWall = null;
         },
 
         leaveGame() {

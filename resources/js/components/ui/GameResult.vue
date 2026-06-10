@@ -15,7 +15,7 @@ const shownElo = ref(props.eloBefore ?? 0);
 const delta = computed(() => (props.eloAfter ?? 0) - (props.eloBefore ?? 0));
 
 const confetti = Array.from({ length: 70 }, (_, i) => {
-    const palette = ['#6d7cff', '#fb4d6d', '#fbbf24', '#34d399', '#eef1ff', '#93a0ff'];
+    const palette = ['#2fc39b', '#e0763c', '#d4a843', '#b8e34d', '#f3ece0', '#62e2bd'];
     return {
         id: i,
         style: {

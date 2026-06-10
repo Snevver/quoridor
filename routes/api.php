@@ -27,6 +27,7 @@ Route::middleware(['auth:sanctum', 'not_banned'])->group(function () {
     // User
     Route::get('/user/me', fn () => auth()->user());
     Route::get('/leaderboard', [UserController::class, 'leaderboard']);
+    Route::get('/users/{user}', [UserController::class, 'show']);
     Route::get('/ranks', fn () => \App\Models\Rank::orderBy('min_elo')->get());
 
     // Admin

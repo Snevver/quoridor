@@ -10,7 +10,7 @@ const props = defineProps({
 const game = useGameStore();
 
 const isLegal = computed(() =>
-    !game.wallMode && game.isMyTurn && game.legalMoves.some((m) => m.x === props.x && m.y === props.y)
+    game.isMyTurn && game.legalMoves.some((m) => m.x === props.x && m.y === props.y)
 );
 
 const isLastMove = computed(() =>
@@ -20,7 +20,7 @@ const isLastMove = computed(() =>
 );
 
 const legalColor = computed(() =>
-    game.myRole === 'p2' ? 'rgba(251,77,109,0.55)' : 'rgba(109,124,255,0.55)'
+    game.myRole === 'p2' ? 'rgba(224,118,60,0.55)' : 'rgba(47,195,155,0.55)'
 );
 
 function onClick() {

@@ -60,6 +60,7 @@ watch(() => matchmaking.matchedGame, (game) => {
 onMounted(async () => {
     matchmaking.listenForMatches();
     ranks.fetch();
+    auth.fetchUser(); // fresh ELO + win counts after returning from a game
 
     axios.get('/api/leaderboard')
         .then(({ data }) => (leaderboard.value = data.players))
@@ -102,13 +103,17 @@ const medals = ['🥇', '🥈', '🥉'];
                 >
                     ⌖ Command deck
                 </router-link>
-                <div class="glass rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2.5">
+                <router-link
+                    :to="{ name: 'profile', params: { id: auth.user.id } }"
+                    class="glass rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2.5 hover:shadow-glow-p1 transition-shadow"
+                    title="View your profile"
+                >
                     <span class="w-7 h-7 rounded-full grid place-items-center bg-p1/25 text-p1-bright font-display font-bold text-xs">
                         {{ auth.user.name.charAt(0).toUpperCase() }}
                     </span>
                     <span class="text-sm font-medium">{{ auth.user.name }}</span>
                     <span class="font-mono text-xs text-gold tabular-nums">{{ auth.user.elo }}</span>
-                </div>
+                </router-link>
                 <button @click="logout" class="btn-ghost rounded-full px-4 py-1.5 text-xs uppercase tracking-widest">
                     Exit
                 </button>
@@ -119,6 +124,28 @@ const medals = ['🥇', '🥈', '🥉'];
             <!-- left: hero / queue -->
             <section class="glass rounded-3xl p-8 sm:p-12 flex flex-col items-center text-center rise" style="--d: 0.12s">
                 <EloDisplay :elo="auth.user.elo" />
+
+                <!-- rank ladder -->
+                <div v-if="ranks.ranks.length" class="w-full max-w-md mt-8">
+                    <div class="font-mono text-[9px] uppercase tracking-[0.35em] text-dim mb-3">rank ladder</div>
+                    <div class="grid gap-1.5" :style="{ gridTemplateColumns: `repeat(${ranks.ranks.length}, 1fr)` }">
+                        <div
+                            v-for="rank in ranks.ranks"
+                            :key="rank.id"
+                            class="rank-step rounded-xl py-2.5 px-1 text-center"
+                            :class="{ 'is-current': ranks.rankFor(auth.user.elo)?.id === rank.id }"
+                            :style="{ '--rank-color': rank.color }"
+                        >
+                            <div class="w-2.5 h-2.5 rounded-full mx-auto mb-1.5"
+                                 :style="{ background: rank.color, boxShadow: `0 0 8px ${rank.color}` }"></div>
+                            <div class="font-mono text-[8px] sm:text-[9px] uppercase tracking-wider truncate px-0.5"
+                                 :style="{ color: rank.color }">{{ rank.name }}</div>
+                            <div class="font-mono text-[8px] text-dim tabular-nums">{{ rank.min_elo }}+</div>
+                            <div v-if="ranks.rankFor(auth.user.elo)?.id === rank.id"
+                                 class="font-mono text-[8px] uppercase tracking-widest text-ink mt-1">▲ you</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="grid grid-cols-3 gap-3 w-full max-w-sm mt-8 mb-10">
                     <div class="glass rounded-2xl py-4">
@@ -174,13 +201,20 @@ const medals = ['🥇', '🥈', '🥉'];
                 </div>
 
                 <ol class="space-y-1.5">
-                    <li
+                    <router-link
                         v-for="(player, i) in leaderboard"
                         :key="player.id"
-                        class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
+                        :to="{ name: 'profile', params: { id: player.id } }"
+                        custom
+                        v-slot="{ navigate }"
+                    >
+                    <li
+                        @click="navigate"
+                        class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors cursor-pointer"
                         :class="[
                             player.id === auth.user.id ? 'bg-p1/10 ring-1 ring-p1/30' : 'hover:bg-white/[0.03]',
                         ]"
+                        :title="`View ${player.name}'s profile`"
                     >
                         <span class="w-7 text-center font-mono text-sm" :class="i < 3 ? '' : 'text-dim'">
                             {{ medals[i] ?? i + 1 }}
@@ -197,6 +231,7 @@ const medals = ['🥇', '🥈', '🥉'];
                         <span class="font-mono text-xs text-dim tabular-nums">{{ player.games_won }}W</span>
                         <span class="font-mono text-sm font-semibold text-gold tabular-nums">{{ player.elo }}</span>
                     </li>
+                    </router-link>
                 </ol>
 
                 <p v-if="!leaderboard.length" class="text-dim text-sm text-center py-8">

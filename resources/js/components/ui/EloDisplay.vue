@@ -39,8 +39,8 @@ const dashOffset = computed(() =>
         <svg :width="size" :height="size" class="-rotate-90">
             <defs>
                 <linearGradient id="eloGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#6d7cff" />
-                    <stop offset="100%" stop-color="#fb4d6d" />
+                    <stop offset="0%" stop-color="#2fc39b" />
+                    <stop offset="100%" stop-color="#e0763c" />
                 </linearGradient>
             </defs>
             <circle :cx="size / 2" :cy="size / 2" :r="radius" fill="none" stroke-width="7" class="elo-ring-track" />

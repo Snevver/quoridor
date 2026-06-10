@@ -26,8 +26,7 @@ const myElo = computed(() => {
 });
 
 function onKeydown(event) {
-    if (event.key === 'w' || event.key === 'W') game.setWallMode(true);
-    if (event.key === 'm' || event.key === 'M' || event.key === 'Escape') game.setWallMode(false);
+    if (event.key === 'Escape') game.clearPreview();
 }
 
 function soundToggle() {
@@ -163,28 +162,9 @@ const playerCards = computed(() => {
                     </div>
                 </transition>
 
-                <!-- mode switch -->
-                <div class="glass rounded-2xl p-2 grid grid-cols-2 gap-2">
-                    <button
-                        @click="game.setWallMode(false)"
-                        class="rounded-xl py-3 text-xs font-display font-semibold uppercase tracking-[0.15em] transition-all"
-                        :class="!game.wallMode ? 'bg-p1/25 text-p1-bright shadow-glow-p1' : 'text-dim hover:text-ink'"
-                    >
-                        ♟ Move <span class="font-mono normal-case opacity-60">(M)</span>
-                    </button>
-                    <button
-                        @click="game.setWallMode(true)"
-                        class="rounded-xl py-3 text-xs font-display font-semibold uppercase tracking-[0.15em] transition-all"
-                        :class="game.wallMode ? 'bg-p2/25 text-p2-bright shadow-glow-p2' : 'text-dim hover:text-ink'"
-                    >
-                        ▦ Wall <span class="font-mono normal-case opacity-60">(W)</span>
-                    </button>
-                </div>
-
                 <p class="text-dim text-xs text-center leading-relaxed px-2">
-                    {{ game.wallMode
-                        ? 'Hover the grooves between cells — green means legal. Click to slam the wall down.'
-                        : 'Glowing cells are your legal moves. Reach the far side to win.' }}
+                    Tap a glowing cell to move. Tap the groove between cells to wall —
+                    green means legal, red means blocked. Reach the far side to win.
                 </p>
             </aside>
 

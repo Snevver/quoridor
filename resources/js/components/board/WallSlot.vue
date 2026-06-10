@@ -18,7 +18,7 @@ const wall = computed(() => ({
     orientation: props.orientation,
 }));
 
-const armed = computed(() => game.wallMode && game.isMyTurn && !game.isFinished);
+const armed = computed(() => game.isMyTurn && !game.isFinished);
 
 // Touch screens get a two-tap flow (tap = preview, tap again = place);
 // pointers with hover keep single-click since hovering already previews.

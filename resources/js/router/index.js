@@ -10,6 +10,7 @@ const router = createRouter({
         { path: '/lobby', name: 'lobby', component: () => import('@/views/LobbyView.vue'), meta: { auth: true } },
         { path: '/game/:id', name: 'game', component: () => import('@/views/GameView.vue'), meta: { auth: true } },
         { path: '/admin', name: 'admin', component: () => import('@/views/AdminView.vue'), meta: { auth: true, admin: true } },
+        { path: '/profile/:id', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { auth: true } },
         { path: '/:pathMatch(.*)*', redirect: '/lobby' },
     ],
 });

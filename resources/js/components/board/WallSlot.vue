@@ -20,6 +20,10 @@ const wall = computed(() => ({
 
 const armed = computed(() => game.wallMode && game.isMyTurn && !game.isFinished);
 
+// Touch screens get a two-tap flow (tap = preview, tap again = place);
+// pointers with hover keep single-click since hovering already previews.
+const isTouch = window.matchMedia('(hover: none)').matches;
+
 const gridStyle = computed(() =>
     props.orientation === 'H'
         ? { gridColumn: 2 * props.cx + 1, gridRow: 2 * props.cy + 2 }
@@ -27,11 +31,26 @@ const gridStyle = computed(() =>
 );
 
 function hover() {
-    if (armed.value) game.previewWall(wall.value.x, wall.value.y, wall.value.orientation);
+    if (armed.value && !isTouch) game.previewWall(wall.value.x, wall.value.y, wall.value.orientation);
+}
+
+function leave() {
+    if (!isTouch) game.clearPreview();
 }
 
 function place() {
-    if (armed.value) game.submitWallPlacement(wall.value.x, wall.value.y, wall.value.orientation);
+    if (!armed.value) return;
+
+    const { x, y, orientation } = wall.value;
+    const pending = game.pendingWall;
+
+    if (!pending || pending.x !== x || pending.y !== y || pending.orientation !== orientation) {
+        game.previewWall(x, y, orientation);
+        if (!isTouch) game.submitWallPlacement(x, y, orientation);
+        return;
+    }
+
+    game.submitWallPlacement(x, y, orientation);
 }
 </script>
 
@@ -41,7 +60,7 @@ function place() {
         :class="{ armed }"
         :style="gridStyle"
         @mouseenter="hover"
-        @mouseleave="game.clearPreview()"
+        @mouseleave="leave"
         @click="place"
     ></div>
 </template>

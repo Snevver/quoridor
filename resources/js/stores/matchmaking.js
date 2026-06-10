@@ -73,6 +73,10 @@ export const useMatchmakingStore = defineStore('matchmaking', {
                         this.stopPolling();
                         const { data: game } = await axios.get(`/api/games/${data.active_game_id}`);
                         this.matchedGame = game;
+                    } else if (!data.in_queue && this.inQueue) {
+                        // Removed server-side (e.g. by an admin) — stop searching.
+                        this.inQueue = false;
+                        this.stopPolling();
                     }
                 } catch {
                     /* transient poll errors are fine */

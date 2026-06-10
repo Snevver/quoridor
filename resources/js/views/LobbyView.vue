@@ -4,11 +4,13 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 import { useMatchmakingStore } from '@/stores/matchmaking';
+import { useRanksStore } from '@/stores/ranks';
 import EloDisplay from '@/components/ui/EloDisplay.vue';
 import MatchFoundOverlay from '@/components/ui/MatchFoundOverlay.vue';
 
 const auth = useAuthStore();
 const matchmaking = useMatchmakingStore();
+const ranks = useRanksStore();
 const router = useRouter();
 
 const leaderboard = ref([]);
@@ -57,6 +59,7 @@ watch(() => matchmaking.matchedGame, (game) => {
 
 onMounted(async () => {
     matchmaking.listenForMatches();
+    ranks.fetch();
 
     axios.get('/api/leaderboard')
         .then(({ data }) => (leaderboard.value = data.players))
@@ -87,11 +90,18 @@ const medals = ['🥇', '🥈', '🥉'];
         <MatchFoundOverlay v-if="matchmaking.matchedGame" :game="matchmaking.matchedGame" :my-id="auth.user.id" />
 
         <!-- top bar -->
-        <header class="flex items-center justify-between px-5 sm:px-10 py-5 rise" style="--d: 0s">
+        <header class="flex items-center justify-between flex-wrap gap-3 px-5 sm:px-10 py-5 rise" style="--d: 0s">
             <h1 class="font-display font-black text-lg sm:text-xl tracking-[0.2em] title-gradient select-none">
                 QUORIDOR
             </h1>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center flex-wrap gap-3 sm:gap-4">
+                <router-link
+                    v-if="auth.user.is_admin"
+                    to="/admin"
+                    class="btn-ghost rounded-full px-4 py-1.5 text-xs uppercase tracking-widest !text-gold !border-gold/40 hover:shadow-glow-gold"
+                >
+                    ⌖ Command deck
+                </router-link>
                 <div class="glass rounded-full pl-2 pr-4 py-1.5 flex items-center gap-2.5">
                     <span class="w-7 h-7 rounded-full grid place-items-center bg-p1/25 text-p1-bright font-display font-bold text-xs">
                         {{ auth.user.name.charAt(0).toUpperCase() }}
@@ -179,6 +189,11 @@ const medals = ['🥇', '🥈', '🥉'];
                             {{ player.name }}
                             <span v-if="player.id === auth.user.id" class="font-mono text-[9px] uppercase tracking-widest text-mint ml-1">you</span>
                         </span>
+                        <span
+                            v-if="ranks.rankFor(player.elo)"
+                            class="font-mono text-[9px] uppercase tracking-widest hidden sm:inline"
+                            :style="{ color: ranks.rankFor(player.elo).color }"
+                        >{{ ranks.rankFor(player.elo).name }}</span>
                         <span class="font-mono text-xs text-dim tabular-nums">{{ player.games_won }}W</span>
                         <span class="font-mono text-sm font-semibold text-gold tabular-nums">{{ player.elo }}</span>
                     </li>

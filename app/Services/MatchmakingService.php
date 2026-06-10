@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Events\GameStarted;
-use App\Jobs\ProcessMatchmaking;
 use App\Models\Game;
 use App\Models\MatchmakingQueue;
 use App\Models\User;
@@ -20,7 +19,9 @@ class MatchmakingService
         MatchmakingQueue::where('user_id', $user->id)->delete();
         MatchmakingQueue::create(['user_id' => $user->id, 'elo_at_join' => $user->elo]);
 
-        ProcessMatchmaking::dispatch();
+        // Match immediately — no queue worker required. The status poll
+        // re-runs this to widen the ELO range for waiting players.
+        $this->processQueue();
     }
 
     public function leaveQueue(User $user): void
@@ -88,7 +89,9 @@ class MatchmakingService
         });
 
         foreach ($games as $game) {
-            broadcast(new GameStarted($game));
+            // A dead websocket server must never break matchmaking; clients
+            // also discover their game via the status poll.
+            rescue(fn () => broadcast(new GameStarted($game)));
         }
     }
 

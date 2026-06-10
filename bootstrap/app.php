@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
+
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'not_banned' => \App\Http\Middleware\EnsureNotBanned::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

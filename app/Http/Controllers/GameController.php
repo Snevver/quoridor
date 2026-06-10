@@ -27,7 +27,7 @@ class GameController extends Controller
         $this->gameService->applyMove($game, $request->user(), $request->validated());
 
         $game->refresh();
-        broadcast(new GameStateUpdated($game, $game->moves()->latest('move_number')->first()));
+        rescue(fn () => broadcast(new GameStateUpdated($game, $game->moves()->latest('move_number')->first())));
 
         return response()->json($this->serialize($game, $request));
     }
@@ -50,7 +50,7 @@ class GameController extends Controller
         $this->gameService->finishGame($game, $loser === 'p1' ? 'p2' : 'p1');
 
         $game->refresh();
-        broadcast(new GameStateUpdated($game));
+        rescue(fn () => broadcast(new GameStateUpdated($game)));
 
         return response()->json($this->serialize($game, $request));
     }

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps({
     won: Boolean,
+    voided: Boolean,
     eloBefore: Number,
     eloAfter: Number,
     opponentName: String,
@@ -50,19 +51,21 @@ onMounted(() => {
 <template>
     <div class="fixed inset-0 z-50 overlay-veil grid place-items-center overflow-hidden px-4">
         <!-- confetti only rains for the victor -->
-        <template v-if="won">
+        <template v-if="won && !voided">
             <span v-for="c in confetti" :key="c.id" class="confetti" :style="c.style"></span>
         </template>
 
         <div class="result-card glass rounded-3xl px-8 sm:px-14 py-10 text-center max-w-md w-full relative"
-             :class="won ? 'shadow-glow-gold' : ''">
+             :class="won && !voided ? 'shadow-glow-gold' : ''">
             <div class="font-display font-black text-5xl sm:text-6xl mb-2 tracking-tight"
-                 :class="won ? 'text-gold text-glow-p1' : 'text-dim'">
-                {{ won ? 'VICTORY' : 'DEFEAT' }}
+                 :class="voided ? 'text-dim' : won ? 'text-gold text-glow-p1' : 'text-dim'">
+                {{ voided ? 'VOIDED' : won ? 'VICTORY' : 'DEFEAT' }}
             </div>
 
             <p class="text-dim text-sm mb-8">
-                {{ won ? `${opponentName} has been outmaneuvered.` : `${opponentName} takes this one. Run it back?` }}
+                {{ voided
+                    ? 'An admin voided this match — no ratings were changed.'
+                    : won ? `${opponentName} has been outmaneuvered.` : `${opponentName} takes this one. Run it back?` }}
             </p>
 
             <div class="glass rounded-2xl py-5 px-6 mb-8">

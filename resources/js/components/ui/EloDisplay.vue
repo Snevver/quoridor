@@ -1,32 +1,37 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { useRanksStore } from '@/stores/ranks';
 
 const props = defineProps({
     elo: { type: Number, required: true },
     size: { type: Number, default: 168 },
 });
 
-// Ring fills relative to a 600–2000 ladder — purely decorative scale.
-const progress = computed(() => Math.min(1, Math.max(0.04, (props.elo - 600) / 1400)));
+const ranksStore = useRanksStore();
+
+const rank = computed(() => ranksStore.rankFor(props.elo));
+const nextRank = computed(() => ranksStore.nextRankFor(props.elo));
+
+// Ring fills with progress toward the next rank threshold.
+const progress = computed(() => {
+    if (!rank.value) return 0.04;
+    if (!nextRank.value) return 1;
+    const span = nextRank.value.min_elo - rank.value.min_elo;
+    return Math.min(1, Math.max(0.04, (props.elo - rank.value.min_elo) / span));
+});
 
 const radius = computed(() => (props.size - 14) / 2);
 const circumference = computed(() => 2 * Math.PI * radius.value);
 
 const drawn = ref(false);
-onMounted(() => requestAnimationFrame(() => (drawn.value = true)));
+onMounted(async () => {
+    await ranksStore.fetch();
+    requestAnimationFrame(() => (drawn.value = true));
+});
 
 const dashOffset = computed(() =>
     drawn.value ? circumference.value * (1 - progress.value) : circumference.value
 );
-
-const tier = computed(() => {
-    if (props.elo >= 1800) return 'Grandmaster';
-    if (props.elo >= 1600) return 'Master';
-    if (props.elo >= 1400) return 'Diamond';
-    if (props.elo >= 1300) return 'Gold';
-    if (props.elo >= 1150) return 'Silver';
-    return 'Bronze';
-});
 </script>
 
 <template>
@@ -50,7 +55,13 @@ const tier = computed(() => {
             <div>
                 <div class="font-mono text-[10px] uppercase tracking-[0.35em] text-dim mb-1">rating</div>
                 <div class="font-display font-black text-4xl tabular-nums">{{ elo }}</div>
-                <div class="font-mono text-[10px] uppercase tracking-[0.3em] text-gold mt-1">{{ tier }}</div>
+                <div v-if="rank" class="font-mono text-[10px] uppercase tracking-[0.3em] mt-1"
+                     :style="{ color: rank.color }">
+                    {{ rank.name }}
+                </div>
+                <div v-if="nextRank" class="font-mono text-[9px] text-dim mt-1 tabular-nums">
+                    {{ nextRank.min_elo - elo }} to {{ nextRank.name }}
+                </div>
             </div>
         </div>
     </div>

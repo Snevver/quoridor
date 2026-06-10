@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ProcessMatchmaking;
 use App\Models\Game;
 use App\Models\MatchmakingQueue;
 use App\Services\MatchmakingService;
@@ -34,7 +33,7 @@ class MatchmakingController extends Controller
         $user = $request->user();
 
         // Re-run matching on poll so ELO ranges widen for waiting players.
-        ProcessMatchmaking::dispatch();
+        $this->matchmaking->processQueue();
 
         $entry = MatchmakingQueue::where('user_id', $user->id)->first();
         $activeGame = Game::where('status', 'active')

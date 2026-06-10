@@ -12,7 +12,7 @@ defineProps({
                 match found
             </div>
 
-            <div class="flex items-center justify-center gap-5 sm:gap-10">
+            <div class="flex items-center justify-center gap-3 sm:gap-10">
                 <div class="vs-left flex-1 max-w-[220px]">
                     <div class="glass rounded-2xl p-5 sm:p-6 border-t-2" style="border-top-color: #6d7cff">
                         <div class="w-12 h-12 mx-auto rounded-full grid place-items-center font-display font-bold text-lg bg-p1/20 text-p1-bright shadow-glow-p1 mb-3">
@@ -24,7 +24,7 @@ defineProps({
                     </div>
                 </div>
 
-                <div class="vs-bolt font-display font-black text-3xl sm:text-5xl title-gradient shrink-0">VS</div>
+                <div class="vs-bolt font-display font-black text-2xl sm:text-5xl title-gradient shrink-0">VS</div>
 
                 <div class="vs-right flex-1 max-w-[220px]">
                     <div class="glass rounded-2xl p-5 sm:p-6 border-t-2" style="border-top-color: #fb4d6d">

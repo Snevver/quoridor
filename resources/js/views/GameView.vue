@@ -85,6 +85,7 @@ const playerCards = computed(() => {
         <GameResult
             v-if="game.isFinished && game.eloResult"
             :won="game.iWon"
+            :voided="!game.boardState?.winner"
             :elo-before="myElo.before"
             :elo-after="myElo.after"
             :opponent-name="game.opponent?.name ?? 'Your rival'"

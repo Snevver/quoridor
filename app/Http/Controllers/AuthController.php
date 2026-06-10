@@ -48,6 +48,14 @@ class AuthController extends Controller
             ]);
         }
 
+        if (Auth::guard('web')->user()->banned_at) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => ['This account has been suspended.'],
+            ]);
+        }
+
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }

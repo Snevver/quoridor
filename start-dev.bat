@@ -16,8 +16,5 @@ start "Quoridor Web" cmd /k php artisan serve --port=8000
 echo Starting Reverb websockets on :8080...
 start "Quoridor Reverb" cmd /k php artisan reverb:start --host=127.0.0.1 --port=8080
 
-echo Starting queue worker...
-start "Quoridor Queue" cmd /k php artisan queue:work --tries=1
-
 echo.
 echo All services launched. Open http://localhost:8000

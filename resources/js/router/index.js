@@ -9,6 +9,7 @@ const router = createRouter({
         { path: '/register', name: 'register', component: () => import('@/views/RegisterView.vue'), meta: { guest: true } },
         { path: '/lobby', name: 'lobby', component: () => import('@/views/LobbyView.vue'), meta: { auth: true } },
         { path: '/game/:id', name: 'game', component: () => import('@/views/GameView.vue'), meta: { auth: true } },
+        { path: '/admin', name: 'admin', component: () => import('@/views/AdminView.vue'), meta: { auth: true, admin: true } },
         { path: '/:pathMatch(.*)*', redirect: '/lobby' },
     ],
 });
@@ -22,6 +23,7 @@ router.beforeEach(async (to) => {
 
     if (to.meta.auth && !auth.user) return { name: 'login' };
     if (to.meta.guest && auth.user) return { name: 'lobby' };
+    if (to.meta.admin && !auth.user?.is_admin) return { name: 'lobby' };
 
     return true;
 });

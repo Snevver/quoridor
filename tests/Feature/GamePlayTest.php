@@ -131,6 +131,38 @@ class GamePlayTest extends TestCase
         $this->pawn($this->bob, 3, 7);
     }
 
+    public function test_game_payload_carries_a_monotonic_version(): void
+    {
+        $response = $this->actingAs($this->alice)->getJson("/api/games/{$this->game->slug}");
+        $response->assertOk()->assertJsonPath('version', 0);
+
+        $this->actingAs($this->alice)
+            ->postJson("/api/games/{$this->game->slug}/move", ['move_type' => 'pawn', 'to' => [4, 1]])
+            ->assertOk()
+            ->assertJsonPath('version', 1);
+
+        $this->actingAs($this->bob)
+            ->postJson("/api/games/{$this->game->slug}/move", ['move_type' => 'pawn', 'to' => [4, 7]])
+            ->assertOk()
+            ->assertJsonPath('version', 2);
+    }
+
+    public function test_version_survives_finishing_and_move_purge(): void
+    {
+        $bobSpots = [[3, 8], [3, 7], [3, 8], [3, 7], [3, 8], [3, 7], [3, 8]];
+        for ($i = 1; $i <= 7; $i++) {
+            $this->pawn($this->alice, 4, $i);
+            $this->pawn($this->bob, ...$bobSpots[$i - 1]);
+        }
+        $this->pawn($this->alice, 4, 8);
+
+        // Move rows are purged on finish; version must not drop back to 0.
+        $this->actingAs($this->bob)
+            ->getJson("/api/games/{$this->game->slug}")
+            ->assertOk()
+            ->assertJsonPath('version', 15);
+    }
+
     public function test_elo_calculation_favors_underdog(): void
     {
         $elo = new EloService();

@@ -5,11 +5,16 @@ import { useAuthStore } from '@/stores/auth';
 import { isWallValid } from '@/lib/quoridor';
 import { sfx } from '@/lib/sound';
 
+// Module-scoped: not state, just plumbing for cleanup.
+let pollTimer = null;
+let connectionHandler = null;
+
 export const useGameStore = defineStore('game', {
     state: () => ({
         game: null,            // serialized game from the API
         boardState: null,      // live board_state (single source of truth)
         myRole: null,          // 'p1' | 'p2'
+        version: 0,            // monotonic move counter; stale payloads are discarded
         legalMoves: [],
         pendingWall: null,     // { x, y, orientation, valid }
         lastMove: null,        // { player_id, move_type, payload }
@@ -31,18 +36,20 @@ export const useGameStore = defineStore('game', {
 
     actions: {
         async joinGame(slug) {
-            this.reset();
+            this.leaveGame(); // retry safety: drop any previous channel/poll first
 
             const { data } = await axios.get(`/api/games/${slug}`);
             this.game = data;
             this.boardState = data.board_state;
             this.myRole = data.my_role;
+            this.version = data.version ?? 0;
 
             if (data.status === 'finished') {
                 this.eloResult = data.elo;
             }
 
             this.subscribeToChannel(data.id);
+            if (data.status === 'active') this.startPolling();
             await this.refreshLegalMoves();
         },
 
@@ -61,12 +68,69 @@ export const useGameStore = defineStore('game', {
                     if (member.id !== auth.user.id) this.opponentOnline = false;
                 })
                 .listen('GameStateUpdated', (payload) => this.onMoveReceived(payload));
+
+            // If the socket drops and comes back, pusher resubscribes the
+            // channels itself — but any moves made meanwhile were missed, so
+            // resync immediately instead of waiting for the next poll tick.
+            const connection = getEcho().connector.pusher.connection;
+            connectionHandler = ({ previous, current }) => {
+                if (current === 'connected' && previous !== 'initialized') {
+                    this.pollState();
+                }
+            };
+            connection.bind('state_change', connectionHandler);
         },
 
-        async onMoveReceived({ board_state, last_move, elo }) {
+        /**
+         * The websocket is the fast path; this poll is the safety net that
+         * keeps a match playable when the socket silently dies. The version
+         * guard makes applying a payload twice (or out of order) a no-op.
+         */
+        startPolling() {
+            this.stopPolling();
+            pollTimer = setInterval(() => this.pollState(), 5000);
+        },
+
+        stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        },
+
+        async pollState() {
+            if (!this.game || this.isFinished || this.submitting) return;
+            try {
+                const { data } = await axios.get(`/api/games/${this.game.slug}`);
+                if (!this.game || this.isFinished) return; // finished while in flight
+                const newer = (data.version ?? 0) > this.version;
+                const justFinished = data.board_state?.status === 'finished';
+                if (!newer && !justFinished) return;
+
+                this.version = Math.max(this.version, data.version ?? 0);
+                this.boardState = data.board_state;
+
+                if (justFinished) {
+                    this.eloResult = data.elo;
+                    this.onGameFinished();
+                    return;
+                }
+                await this.refreshLegalMoves();
+            } catch {
+                /* transient poll errors are fine */
+            }
+        },
+
+        async onMoveReceived({ board_state, last_move, elo, version }) {
+            // Stale or duplicate broadcast (e.g. our own move echoing back
+            // after the optimistic update, or a race with the poll) — skip,
+            // unless it carries the game's end.
+            if ((version ?? Infinity) <= this.version && board_state.status !== 'finished') return;
+
             const auth = useAuthStore();
             const fromOpponent = last_move && last_move.player_id !== auth.user.id;
 
+            this.version = Math.max(this.version, version ?? 0);
             this.boardState = board_state;
             this.lastMove = last_move;
 
@@ -100,11 +164,12 @@ export const useGameStore = defineStore('game', {
             if (!this.isMyTurn || this.submitting) return;
             if (!this.legalMoves.some((m) => m.x === x && m.y === y)) return;
 
-            const snapshot = JSON.parse(JSON.stringify(this.boardState));
+            const snapshot = { board: JSON.parse(JSON.stringify(this.boardState)), version: this.version };
 
             // Optimistic: glide the pawn instantly.
             this.boardState.pawns[this.myRole] = { x, y };
             this.boardState.current_turn = this.oppRole;
+            this.version++;
             this.legalMoves = [];
             sfx.move();
 
@@ -118,11 +183,12 @@ export const useGameStore = defineStore('game', {
                 return;
             }
 
-            const snapshot = JSON.parse(JSON.stringify(this.boardState));
+            const snapshot = { board: JSON.parse(JSON.stringify(this.boardState)), version: this.version };
 
             this.boardState.walls.push({ x, y, orientation });
             this.boardState.walls_left[this.myRole]--;
             this.boardState.current_turn = this.oppRole;
+            this.version++;
             this.pendingWall = null;
             this.legalMoves = [];
             sfx.wall();
@@ -136,13 +202,15 @@ export const useGameStore = defineStore('game', {
             try {
                 const { data } = await axios.post(`/api/games/${this.game.slug}/move`, payload);
                 this.boardState = data.board_state;
+                this.version = Math.max(this.version, data.version ?? 0);
 
                 if (data.status === 'finished') {
                     this.eloResult = data.elo;
                     this.onGameFinished();
                 }
             } catch {
-                this.boardState = snapshot;
+                this.boardState = snapshot.board;
+                this.version = snapshot.version;
                 this.rejectMove();
                 await this.refreshLegalMoves();
             } finally {
@@ -159,6 +227,7 @@ export const useGameStore = defineStore('game', {
         },
 
         onGameFinished() {
+            this.stopPolling();
             this.legalMoves = [];
             this.pendingWall = null;
             this.iWon ? sfx.win() : sfx.lose();
@@ -189,6 +258,11 @@ export const useGameStore = defineStore('game', {
         },
 
         leaveGame() {
+            this.stopPolling();
+            if (connectionHandler) {
+                getEcho().connector.pusher.connection.unbind('state_change', connectionHandler);
+                connectionHandler = null;
+            }
             if (this.channelName) {
                 getEcho().leave(this.channelName);
             }

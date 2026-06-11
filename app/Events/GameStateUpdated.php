@@ -29,6 +29,7 @@ class GameStateUpdated implements ShouldBroadcastNow
     {
         return [
             'board_state' => $this->game->board_state,
+            'version' => $this->game->version,
             'last_move' => $this->move ? [
                 'player_id' => $this->move->player_id,
                 'move_type' => $this->move->move_type,

@@ -46,6 +46,18 @@ class Game extends Model
         return 'slug';
     }
 
+    /**
+     * Monotonic state counter so clients can discard stale payloads when the
+     * websocket and the HTTP poll race. Finished games purge their move rows
+     * and keep only move_count.
+     */
+    public function getVersionAttribute(): int
+    {
+        return $this->status === 'finished'
+            ? max((int) $this->move_count, $this->moves()->count())
+            : $this->moves()->count();
+    }
+
     public function player1(): BelongsTo
     {
         return $this->belongsTo(User::class, 'player1_id');

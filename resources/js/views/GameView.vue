@@ -15,6 +15,7 @@ const router = useRouter();
 
 const loading = ref(true);
 const failed = ref(false);
+const failMessage = ref('');
 const muted = ref(isMuted());
 const confirmingResign = ref(false);
 
@@ -51,15 +52,35 @@ function backToLobby() {
     router.push({ name: 'lobby' });
 }
 
-onMounted(async () => {
-    window.addEventListener('keydown', onKeydown);
-    try {
-        await game.joinGame(route.params.slug);
-    } catch {
-        failed.value = true;
-    } finally {
-        loading.value = false;
+// Joining right after matchmaking can hit transient failures (brief network
+// blips, server hiccups); retry before giving up so the opponent isn't left
+// staring at "opponent disconnected".
+async function loadGame() {
+    loading.value = true;
+    failed.value = false;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            await game.joinGame(route.params.slug);
+            loading.value = false;
+            return;
+        } catch (error) {
+            const status = error.response?.status;
+            failMessage.value = status
+                ? `The server replied with error ${status}${error.response.data?.message ? ` — ${error.response.data.message}` : ''}.`
+                : 'Network error — check your connection.';
+            if ([403, 404].includes(status)) break; // not transient, retrying won't help
+            if (attempt < 3) await new Promise((r) => setTimeout(r, attempt * 1200));
+        }
     }
+
+    loading.value = false;
+    failed.value = true;
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', onKeydown);
+    loadGame();
 });
 
 onUnmounted(() => {
@@ -114,11 +135,17 @@ const playerCards = computed(() => {
         <LoadingSpinner v-if="loading" class="flex-1" />
 
         <div v-else-if="failed" class="flex-1 grid place-items-center">
-            <div class="text-center">
-                <p class="text-dim mb-4">This match could not be loaded.</p>
-                <button @click="backToLobby" class="btn-hero rounded-xl px-8 py-3 text-sm text-white">
-                    <span class="relative z-10">Back to lobby</span>
-                </button>
+            <div class="text-center px-4">
+                <p class="text-dim mb-2">This match could not be loaded.</p>
+                <p class="font-mono text-xs text-dim mb-4">{{ failMessage }}</p>
+                <div class="flex items-center justify-center gap-3">
+                    <button @click="loadGame" class="btn-hero rounded-xl px-8 py-3 text-sm text-white">
+                        <span class="relative z-10">Retry</span>
+                    </button>
+                    <button @click="backToLobby" class="btn-ghost rounded-xl px-8 py-3 text-sm">
+                        Back to lobby
+                    </button>
+                </div>
             </div>
         </div>
 

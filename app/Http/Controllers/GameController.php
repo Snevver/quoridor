@@ -75,6 +75,7 @@ class GameController extends Controller
             'slug' => $game->slug,
             'board_state' => $game->board_state,
             'status' => $game->status,
+            'version' => $game->version,
             'my_role' => $game->roleOf($request->user()),
             'players' => [
                 'p1' => $game->player1->only('id', 'name', 'elo'),

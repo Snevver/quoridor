@@ -327,6 +327,13 @@ body {
     position: relative;
 }
 
+/* Everyone plays bottom-up: p1's row 0 renders at the top, so p1's whole
+   grid is rotated 180°. Pure point symmetry — logical coordinates, server
+   payloads, and pointer hit-testing (visual-space rects) are unaffected. */
+.qgrid-flipped {
+    transform: rotate(180deg);
+}
+
 .qcell {
     border-radius: 7px;
     background: linear-gradient(150deg, rgb(var(--c-cell-hi)), rgb(var(--c-cell-lo)));

@@ -40,7 +40,7 @@ const p2Active = computed(() => game.boardState?.status === 'active' && game.boa
     <div class="board-stage">
         <div class="board-tilt" :class="{ shake: shaking }">
             <div class="board-frame">
-                <div v-if="game.boardState" class="qgrid">
+                <div v-if="game.boardState" class="qgrid" :class="{ 'qgrid-flipped': game.myRole === 'p1' }">
                     <BoardCell v-for="cell in cells" :key="`c${cell.x}-${cell.y}`" :x="cell.x" :y="cell.y" />
 
                     <WallSlot v-for="slot in hSlots" :key="`h${slot.cx}-${slot.cy}`"

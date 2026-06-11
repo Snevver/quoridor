@@ -15,7 +15,14 @@ const shownElo = ref(props.eloBefore ?? 0);
 const delta = computed(() => (props.eloAfter ?? 0) - (props.eloBefore ?? 0));
 
 const confetti = Array.from({ length: 70 }, (_, i) => {
-    const palette = ['#2fc39b', '#e0763c', '#d4a843', '#b8e34d', '#f3ece0', '#62e2bd'];
+    const palette = [
+        'rgb(var(--c-p1))',
+        'rgb(var(--c-p2))',
+        'rgb(var(--c-accent))',
+        'rgb(var(--c-success))',
+        'rgb(var(--c-ink))',
+        'rgb(var(--c-p1-bright))',
+    ];
     return {
         id: i,
         style: {

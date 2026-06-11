@@ -14,7 +14,7 @@ defineProps({
 
             <div class="flex items-center justify-center gap-3 sm:gap-10">
                 <div class="vs-left flex-1 max-w-[220px]">
-                    <div class="glass rounded-2xl p-5 sm:p-6 border-t-2" style="border-top-color: #2fc39b">
+                    <div class="glass rounded-2xl p-5 sm:p-6 border-t-2" style="border-top-color: var(--p1)">
                         <div class="w-12 h-12 mx-auto rounded-full grid place-items-center font-display font-bold text-lg bg-p1/20 text-p1-bright shadow-glow-p1 mb-3">
                             {{ (game.players?.p1?.name ?? '?').charAt(0).toUpperCase() }}
                         </div>
@@ -27,7 +27,7 @@ defineProps({
                 <div class="vs-bolt font-display font-black text-2xl sm:text-5xl title-gradient shrink-0">VS</div>
 
                 <div class="vs-right flex-1 max-w-[220px]">
-                    <div class="glass rounded-2xl p-5 sm:p-6 border-t-2" style="border-top-color: #e0763c">
+                    <div class="glass rounded-2xl p-5 sm:p-6 border-t-2" style="border-top-color: var(--p2)">
                         <div class="w-12 h-12 mx-auto rounded-full grid place-items-center font-display font-bold text-lg bg-p2/20 text-p2-bright shadow-glow-p2 mb-3">
                             {{ (game.players?.p2?.name ?? '?').charAt(0).toUpperCase() }}
                         </div>

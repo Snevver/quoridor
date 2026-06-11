@@ -170,7 +170,7 @@ const playerCards = computed(() => {
                             <span
                                 v-else
                                 class="w-1.5 h-1.5 rounded-full shrink-0"
-                                :class="game.opponentOnline ? 'bg-mint shadow-[0_0_8px_rgba(52,211,153,0.9)]' : 'bg-dim'"
+                                :class="game.opponentOnline ? 'bg-mint shadow-[0_0_8px_rgb(var(--c-success)/0.9)]' : 'bg-dim'"
                                 :title="game.opponentOnline ? 'Online' : 'Offline'"
                             ></span>
                         </div>

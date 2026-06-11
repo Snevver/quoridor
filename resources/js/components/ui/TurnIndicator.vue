@@ -14,7 +14,7 @@ defineProps({
         >
             <span
                 class="w-2.5 h-2.5 rounded-full"
-                :class="isMyTurn ? 'bg-mint shadow-[0_0_12px_rgba(52,211,153,0.9)] animate-pulse' : 'bg-dim'"
+                :class="isMyTurn ? 'bg-mint shadow-[0_0_12px_rgb(var(--c-success)/0.9)] animate-pulse' : 'bg-dim'"
             ></span>
             <span class="font-display text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase"
                   :class="isMyTurn ? 'text-mint' : 'text-dim'">

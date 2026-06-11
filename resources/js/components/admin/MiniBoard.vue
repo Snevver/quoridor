@@ -24,7 +24,7 @@ function wallStyle(wall) {
         </template>
 
         <div v-for="(wall, i) in boardState.walls" :key="`mw${i}`"
-             class="rounded-[2px] bg-ink/90 shadow-[0_0_6px_rgba(238,241,255,0.5)]"
+             class="rounded-[2px] bg-ink/90 shadow-[0_0_6px_rgb(var(--c-ink)/0.5)]"
              :style="wallStyle(wall)"></div>
 
         <div class="rounded-full bg-p1 shadow-glow-p1 m-[3px]"

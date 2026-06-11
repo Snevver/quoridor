@@ -14,7 +14,7 @@ const style = computed(() => ({
         calc(${props.pos.x} * (var(--cell) + var(--slot))),
         calc(${props.pos.y} * (var(--cell) + var(--slot)))
     )`,
-    '--ring-color': props.role === 'p1' ? 'rgba(47,195,155,0.8)' : 'rgba(224,118,60,0.8)',
+    '--ring-color': props.role === 'p1' ? 'rgb(var(--c-p1) / 0.8)' : 'rgb(var(--c-p2) / 0.8)',
 }));
 </script>
 

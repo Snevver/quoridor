@@ -20,7 +20,7 @@ const isLastMove = computed(() =>
 );
 
 const legalColor = computed(() =>
-    game.myRole === 'p2' ? 'rgba(224,118,60,0.55)' : 'rgba(47,195,155,0.55)'
+    game.myRole === 'p2' ? 'rgb(var(--c-p2) / 0.55)' : 'rgb(var(--c-p1) / 0.55)'
 );
 
 function onClick() {

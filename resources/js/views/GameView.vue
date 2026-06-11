@@ -191,8 +191,8 @@ const playerCards = computed(() => {
                 </transition>
 
                 <p class="text-dim text-xs text-center leading-relaxed px-2">
-                    Tap a glowing cell to move. Drag a wall from your stack onto a groove —
-                    green means legal, red means blocked. Reach the far side to win.
+                    Tap a glowing cell to move. Click a groove between cells (or drag a wall
+                    from your stack) — green means legal, red means blocked. Reach the far side to win.
                 </p>
             </aside>
 

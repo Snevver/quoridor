@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useGameStore } from '@/stores/game';
+import { useBoardView } from '@/composables/useBoardView';
 
 const props = defineProps({
     x: { type: Number, required: true },
@@ -8,6 +9,7 @@ const props = defineProps({
 });
 
 const game = useGameStore();
+const { cellTrack } = useBoardView();
 
 const isLegal = computed(() =>
     game.isMyTurn && game.legalMoves.some((m) => m.x === props.x && m.y === props.y)
@@ -38,8 +40,8 @@ function onClick() {
             'last-move': isLastMove,
         }"
         :style="{
-            gridColumn: 2 * x + 1,
-            gridRow: 2 * y + 1,
+            gridColumn: cellTrack(x),
+            gridRow: cellTrack(y),
             '--legal-color': legalColor,
         }"
         @click="onClick"

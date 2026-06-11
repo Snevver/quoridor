@@ -201,8 +201,13 @@ export const useGameStore = defineStore('game', {
             this.submitting = true;
             try {
                 const { data } = await axios.post(`/api/games/${this.game.slug}/move`, payload);
-                this.boardState = data.board_state;
-                this.version = Math.max(this.version, data.version ?? 0);
+
+                // A slow response can arrive after the opponent's NEXT move
+                // already landed via websocket — never clobber newer state.
+                if ((data.version ?? Infinity) >= this.version) {
+                    this.boardState = data.board_state;
+                    this.version = Math.max(this.version, data.version ?? 0);
+                }
 
                 if (data.status === 'finished') {
                     this.eloResult = data.elo;

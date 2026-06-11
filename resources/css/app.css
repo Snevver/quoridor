@@ -287,10 +287,10 @@ body {
     perspective: 1400px;
 }
 
-/* Static tilt — the board never moves under the cursor. */
+/* Static tilt — the board never moves under the cursor. No preserve-3d:
+   3D-composited descendants break pointer hit-testing in some browsers. */
 .board-tilt {
     transform: rotateX(6deg);
-    transform-style: preserve-3d;
 }
 
 @media (max-width: 640px) {
@@ -325,13 +325,6 @@ body {
     grid-template-columns: repeat(8, var(--cell) var(--slot)) var(--cell);
     grid-template-rows: repeat(8, var(--cell) var(--slot)) var(--cell);
     position: relative;
-}
-
-/* Everyone plays bottom-up: p1's row 0 renders at the top, so p1's whole
-   grid is rotated 180°. Pure point symmetry — logical coordinates, server
-   payloads, and pointer hit-testing (visual-space rects) are unaffected. */
-.qgrid-flipped {
-    transform: rotate(180deg);
 }
 
 .qcell {
@@ -393,12 +386,23 @@ body {
 
 /* --- wall slots ------------------------------------------------------- */
 
-/* Grooves are passive drop targets: useWallDrag reads their on-screen
-   positions to snap the dragged wall, but they take no pointer input. */
+/* Grooves: hover + click targets on desktop, passive snap targets for the
+   wall drag (useWallDrag reads their on-screen positions) on touch. */
 .qslot {
     position: relative;
     border-radius: 3px;
-    pointer-events: none;
+    transition: background 0.15s ease;
+}
+
+.qslot.armed { cursor: crosshair; }
+
+.qslot.armed:hover { background: rgb(var(--c-ink) / 0.06); }
+
+/* Generous invisible hit area so grooves are easy to hover and click. */
+.qslot.armed::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
 }
 
 /* --- wall dragging ----------------------------------------------------- */
@@ -436,6 +440,19 @@ body {
 
 /* Once a groove snaps, the green/red preview takes over — fade the ghost. */
 .wall-ghost.is-snapped { opacity: 0.25; }
+
+/* Nudge the mobile wall tray when it becomes your turn so new players
+   notice that walls are dragged from here. */
+.tray-nudge {
+    animation: tray-nudge 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tray-nudge {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-7px); }
+    45% { transform: translateX(6px); }
+    70% { transform: translateX(-3px); }
+}
 
 /* --- placed + preview walls ------------------------------------------- */
 

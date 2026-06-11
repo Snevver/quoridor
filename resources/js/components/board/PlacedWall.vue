@@ -1,17 +1,22 @@
 <script setup>
 import { computed } from 'vue';
+import { useBoardView } from '@/composables/useBoardView';
 
 const props = defineProps({
-    wall: { type: Object, required: true },      // { x, y, orientation }
+    wall: { type: Object, required: true },      // { x, y, orientation } in server space
     preview: { type: Boolean, default: false },
     valid: { type: Boolean, default: true },
 });
 
-const style = computed(() =>
-    props.wall.orientation === 'H'
-        ? { gridColumn: `${2 * props.wall.x + 1} / span 3`, gridRow: `${2 * props.wall.y + 2}` }
-        : { gridColumn: `${2 * props.wall.x + 2}`, gridRow: `${2 * props.wall.y + 1} / span 3` }
-);
+const { anchorCoord } = useBoardView();
+
+const style = computed(() => {
+    const x = anchorCoord(props.wall.x);
+    const y = anchorCoord(props.wall.y);
+    return props.wall.orientation === 'H'
+        ? { gridColumn: `${2 * x + 1} / span 3`, gridRow: `${2 * y + 2}` }
+        : { gridColumn: `${2 * x + 2}`, gridRow: `${2 * y + 1} / span 3` };
+});
 </script>
 
 <template>

@@ -11,7 +11,8 @@ class UserController extends Controller
     public function leaderboard(): JsonResponse
     {
         return response()->json([
-            'players' => User::orderByDesc('elo')
+            'players' => User::whereNull('banned_at')
+                ->orderByDesc('elo')
                 ->limit(10)
                 ->get(['id', 'slug', 'name', 'elo', 'games_played', 'games_won']),
         ]);

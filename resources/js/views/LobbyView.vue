@@ -5,11 +5,13 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 import { useMatchmakingStore } from '@/stores/matchmaking';
 import { useRanksStore } from '@/stores/ranks';
+import { useOnlineStore } from '@/stores/online';
 import EloDisplay from '@/components/ui/EloDisplay.vue';
 
 const auth = useAuthStore();
 const matchmaking = useMatchmakingStore();
 const ranks = useRanksStore();
+const online = useOnlineStore();
 const router = useRouter();
 
 const leaderboard = ref([]);
@@ -149,6 +151,12 @@ const medals = ['🥇', '🥈', '🥉'];
                         <div class="font-display font-bold text-xl sm:text-2xl tabular-nums text-gold">{{ winRate }}</div>
                         <div class="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.25em] text-dim mt-1 truncate">winrate</div>
                     </div>
+                </div>
+
+                <!-- online counter -->
+                <div v-if="online.count > 0" class="flex items-center gap-1.5 mb-4">
+                    <span class="w-1.5 h-1.5 rounded-full bg-mint animate-pulse"></span>
+                    <span class="font-mono text-[10px] uppercase tracking-[0.3em] text-dim">{{ online.count }} online</span>
                 </div>
 
                 <!-- queue zone -->

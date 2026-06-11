@@ -3,11 +3,18 @@ import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useMatchmakingStore } from '@/stores/matchmaking';
+import { useOnlineStore } from '@/stores/online';
 import MatchFoundOverlay from '@/components/ui/MatchFoundOverlay.vue';
 
 const auth = useAuthStore();
 const matchmaking = useMatchmakingStore();
+const online = useOnlineStore();
 const router = useRouter();
+
+watch(() => auth.user, (user) => {
+    if (user) online.join();
+    else online.leave();
+}, { immediate: true });
 
 // Match handling lives at the app root: no matter which page the player is
 // on when a match lands, the splash shows once, then we enter the arena and

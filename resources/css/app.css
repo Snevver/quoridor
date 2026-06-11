@@ -393,22 +393,49 @@ body {
 
 /* --- wall slots ------------------------------------------------------- */
 
+/* Grooves are passive drop targets: useWallDrag reads their on-screen
+   positions to snap the dragged wall, but they take no pointer input. */
 .qslot {
     position: relative;
     border-radius: 3px;
-    transition: background 0.15s ease;
+    pointer-events: none;
 }
 
-.qslot.armed { cursor: crosshair; }
+/* --- wall dragging ----------------------------------------------------- */
 
-.qslot.armed:hover { background: rgb(var(--c-ink) / 0.06); }
-
-/* Generous invisible hit area so grooves are easy to hit, also on touch. */
-.qslot.armed::before {
-    content: '';
-    position: absolute;
-    inset: -4px;
+/* touch-action: none keeps the page from scrolling while a wall is
+   dragged on a touch screen. */
+.wall-drag-source {
+    touch-action: none;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
 }
+
+.wall-drag-source:active { cursor: grabbing; }
+
+/* The wall following the pointer while dragging from the stack. */
+.wall-ghost {
+    position: fixed;
+    z-index: 80;
+    pointer-events: none;
+    width: calc(var(--cell) * 2 + var(--slot));
+    height: var(--slot);
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    background: linear-gradient(120deg, rgb(var(--c-bone-1)), rgb(var(--c-bone-2)) 50%, rgb(var(--c-bone-3)));
+    box-shadow: 0 0 12px rgb(var(--c-bone-2) / 0.5), 0 6px 18px rgba(0, 0, 0, 0.5);
+    opacity: 0.9;
+    transition: opacity 0.15s ease;
+}
+
+.wall-ghost.is-v {
+    width: var(--slot);
+    height: calc(var(--cell) * 2 + var(--slot));
+}
+
+/* Once a groove snaps, the green/red preview takes over — fade the ghost. */
+.wall-ghost.is-snapped { opacity: 0.25; }
 
 /* --- placed + preview walls ------------------------------------------- */
 

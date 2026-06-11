@@ -6,6 +6,7 @@ import { isMuted, toggleMute } from '@/lib/sound';
 import QuoridorBoard from '@/components/board/QuoridorBoard.vue';
 import TurnIndicator from '@/components/ui/TurnIndicator.vue';
 import WallCounter from '@/components/ui/WallCounter.vue';
+import WallTray from '@/components/ui/WallTray.vue';
 import GameResult from '@/components/ui/GameResult.vue';
 import LoadingSpinner from '@/components/ui/LoadingSpinner.vue';
 
@@ -175,7 +176,7 @@ const playerCards = computed(() => {
                             ></span>
                         </div>
                         <div class="font-mono text-[11px] text-dim tabular-nums mb-1.5">{{ card.info?.elo }} ELO</div>
-                        <WallCounter :left="card.wallsLeft" :color="card.role" />
+                        <WallCounter :left="card.wallsLeft" :color="card.role" :draggable="card.isMe" />
                     </div>
                 </div>
 
@@ -190,7 +191,7 @@ const playerCards = computed(() => {
                 </transition>
 
                 <p class="text-dim text-xs text-center leading-relaxed px-2">
-                    Tap a glowing cell to move. Tap the groove between cells to wall —
+                    Tap a glowing cell to move. Drag a wall from your stack onto a groove —
                     green means legal, red means blocked. Reach the far side to win.
                 </p>
             </aside>
@@ -199,6 +200,7 @@ const playerCards = computed(() => {
             <section class="order-1 lg:order-2 flex flex-col items-center gap-6 rise" style="--d: 0.2s">
                 <TurnIndicator :is-my-turn="game.isMyTurn" :finished="game.isFinished" />
                 <QuoridorBoard />
+                <WallTray />
             </section>
         </main>
     </div>

@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { useGameStore } from '@/stores/game';
+import { useWallDrag } from '@/composables/useWallDrag';
 import BoardCell from './BoardCell.vue';
 import WallSlot from './WallSlot.vue';
 import PlacedWall from './PlacedWall.vue';
 import PlayerPawn from './PlayerPawn.vue';
 
 const game = useGameStore();
+const { drag } = useWallDrag();
 
 const cells = [];
 for (let y = 0; y < 9; y++) {
@@ -59,5 +61,15 @@ const p2Active = computed(() => game.boardState?.status === 'active' && game.boa
                 </div>
             </div>
         </div>
+
+        <!-- the wall being dragged from the stack; fades back once a groove snaps -->
+        <Teleport to="body">
+            <div
+                v-if="drag.active"
+                class="wall-ghost"
+                :class="{ 'is-v': drag.orientation === 'V', 'is-snapped': !!game.pendingWall }"
+                :style="{ left: `${drag.x}px`, top: `${drag.y}px` }"
+            ></div>
+        </Teleport>
     </div>
 </template>

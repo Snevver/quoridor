@@ -185,12 +185,12 @@ onMounted(() => {
 <template>
     <div class="min-h-screen flex flex-col">
         <!-- top bar -->
-        <header class="flex items-center justify-between px-5 sm:px-10 py-5 rise" style="--d: 0s">
-            <div class="flex items-baseline gap-4">
+        <header class="flex items-center justify-between flex-wrap gap-3 px-4 sm:px-10 py-5 rise" style="--d: 0s">
+            <div class="flex items-baseline gap-4 min-w-0">
                 <router-link to="/lobby" class="font-display font-black text-lg tracking-[0.2em] title-gradient select-none">
                     QUORIDOR
                 </router-link>
-                <span class="font-display font-semibold text-xs tracking-[0.45em] uppercase text-gold text-glow-p1">
+                <span class="hidden sm:inline font-display font-semibold text-xs tracking-[0.45em] uppercase text-gold text-glow-p1">
                     ⌖ command deck
                 </span>
             </div>
@@ -199,7 +199,7 @@ onMounted(() => {
             </router-link>
         </header>
 
-        <main class="flex-1 w-full max-w-6xl mx-auto px-5 sm:px-10 pb-14 space-y-6">
+        <main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-10 pb-14 space-y-6">
             <!-- stats -->
             <section v-if="statCards" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 rise" style="--d: 0.08s">
                 <StatCard v-for="card in statCards" :key="card.label" v-bind="card" />
@@ -219,7 +219,7 @@ onMounted(() => {
             </nav>
 
             <!-- PLAYERS -->
-            <section v-if="tab === 'players'" class="glass rounded-3xl p-6 rise" style="--d: 0.2s">
+            <section v-if="tab === 'players'" class="glass rounded-3xl p-4 sm:p-6 rise" style="--d: 0.2s">
                 <input
                     v-model="search"
                     @input="onSearch"
@@ -228,7 +228,49 @@ onMounted(() => {
                     class="input-arena max-w-sm mb-5"
                 />
 
-                <div class="overflow-x-auto">
+                <!-- phone: stacked cards, nothing to scroll sideways -->
+                <div class="md:hidden space-y-2">
+                    <div v-for="user in users?.data ?? []" :key="`card-${user.id}`"
+                         class="rounded-xl border border-line/50 p-3.5 space-y-2"
+                         :class="{ 'opacity-50': user.banned_at }">
+                        <div class="flex items-center gap-2 font-medium flex-wrap">
+                            <span class="truncate min-w-0">{{ user.name }}</span>
+                            <span v-if="user.is_admin" class="font-mono text-[9px] uppercase tracking-widest text-gold border border-gold/40 rounded px-1.5 py-0.5 shrink-0">admin</span>
+                            <span v-if="user.banned_at" class="font-mono text-[9px] uppercase tracking-widest text-p2 border border-p2/40 rounded px-1.5 py-0.5 shrink-0">banned</span>
+                            <span v-if="user.id === auth.user.id" class="font-mono text-[9px] uppercase tracking-widest text-mint shrink-0">you</span>
+                        </div>
+                        <div class="text-dim text-xs truncate">{{ user.email }}</div>
+                        <div class="flex items-center flex-wrap gap-x-4 gap-y-1 font-mono text-xs tabular-nums">
+                            <template v-if="eloEdit.id === user.id">
+                                <input v-model.number="eloEdit.value" type="number" min="0" max="4000"
+                                       class="input-arena !py-1 !px-2 w-24 !rounded-lg"
+                                       @keyup.enter="saveElo(user)" @keyup.escape="eloEdit.id = null" />
+                                <button @click="saveElo(user)" class="text-mint hover:underline">save</button>
+                            </template>
+                            <button v-else @click="startEloEdit(user)"
+                                    class="text-gold hover:underline decoration-dotted underline-offset-4"
+                                    title="Tap to edit">
+                                {{ user.elo }} ELO ✎
+                            </button>
+                            <span class="text-dim">{{ user.games_won }} / {{ user.games_played }} won</span>
+                            <span class="text-dim">{{ fmtDate(user.created_at) }}</span>
+                        </div>
+                        <div v-if="user.id !== auth.user.id" class="flex flex-wrap gap-2 pt-1">
+                            <button @click="confirmThen(`admin-${user.id}`, () => toggleAdmin(user))"
+                                    class="btn-ghost rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-widest"
+                                    :class="armed === `admin-${user.id}` ? '!text-gold !border-gold/60' : ''">
+                                {{ armed === `admin-${user.id}` ? 'Sure?' : (user.is_admin ? 'Demote' : 'Promote') }}
+                            </button>
+                            <button @click="confirmThen(`ban-${user.id}`, () => toggleBan(user))"
+                                    class="btn-ghost rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-widest"
+                                    :class="armed === `ban-${user.id}` ? '!text-p2 !border-p2/60' : ''">
+                                {{ armed === `ban-${user.id}` ? 'Sure?' : (user.banned_at ? 'Unban' : 'Ban') }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="font-mono text-[10px] uppercase tracking-[0.25em] text-dim text-left">
@@ -296,8 +338,8 @@ onMounted(() => {
             </section>
 
             <!-- MATCHES -->
-            <section v-if="tab === 'matches'" class="glass rounded-3xl p-6 rise" style="--d: 0.2s">
-                <div class="flex gap-2 mb-5">
+            <section v-if="tab === 'matches'" class="glass rounded-3xl p-4 sm:p-6 rise" style="--d: 0.2s">
+                <div class="flex flex-wrap gap-2 mb-5">
                     <button v-for="f in [['', 'all'], ['active', 'live'], ['finished', 'finished']]" :key="f[0]"
                             @click="setFilter(f[0])"
                             class="rounded-full px-4 py-1.5 text-[10px] font-mono uppercase tracking-[0.25em] border transition-all"
@@ -309,9 +351,9 @@ onMounted(() => {
                 <div class="space-y-2">
                     <div v-for="game in games?.data ?? []" :key="game.id">
                         <button @click="inspect(game)"
-                                class="w-full flex items-center gap-4 rounded-xl px-4 py-3 border border-line/50 hover:bg-white/[0.025] transition-colors text-left">
-                            <span class="font-mono text-xs text-dim">#{{ game.id }}</span>
-                            <span class="flex-1 text-sm">
+                                class="w-full flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl px-4 py-3 border border-line/50 hover:bg-white/[0.025] transition-colors text-left">
+                            <span class="font-mono text-xs text-dim shrink-0">#{{ game.id }}</span>
+                            <span class="flex-1 min-w-[150px] text-sm">
                                 <span class="text-p1-bright font-medium">{{ game.player1?.name }}</span>
                                 <span class="text-dim mx-2">vs</span>
                                 <span class="text-p2-bright font-medium">{{ game.player2?.name }}</span>
@@ -325,7 +367,7 @@ onMounted(() => {
 
                         <!-- inspector -->
                         <div v-if="inspected?.id === game.id"
-                             class="glass rounded-xl mt-1 p-5 flex flex-col md:flex-row gap-6 items-start">
+                             class="glass rounded-xl mt-1 p-4 sm:p-5 flex flex-col md:flex-row gap-6 items-start">
                             <MiniBoard :board-state="inspected.board_state" />
                             <div class="flex-1 min-w-0 space-y-4">
                                 <div class="font-mono text-xs text-dim space-y-1">
@@ -354,8 +396,8 @@ onMounted(() => {
 
                                 <div v-if="inspected.moves?.length" class="max-h-40 overflow-y-auto font-mono text-xs text-dim space-y-0.5 pr-2">
                                     <div v-for="move in inspected.moves" :key="move.id" class="flex gap-3">
-                                        <span class="w-8 text-right tabular-nums opacity-60">{{ move.move_number }}.</span>
-                                        <span class="w-28 truncate">{{ move.player?.name }}</span>
+                                        <span class="w-8 text-right tabular-nums opacity-60 shrink-0">{{ move.move_number }}.</span>
+                                        <span class="w-20 sm:w-28 truncate shrink-0">{{ move.player?.name }}</span>
                                         <span v-if="move.move_type === 'pawn'">→ ({{ move.payload.to[0] }},{{ move.payload.to[1] }})</span>
                                         <span v-else>▦ wall {{ move.payload.orientation }} ({{ move.payload.x }},{{ move.payload.y }})</span>
                                     </div>
@@ -377,8 +419,8 @@ onMounted(() => {
             </section>
 
             <!-- QUEUE -->
-            <section v-if="tab === 'queue'" class="glass rounded-3xl p-6 rise" style="--d: 0.2s">
-                <div class="flex items-center justify-between mb-5">
+            <section v-if="tab === 'queue'" class="glass rounded-3xl p-4 sm:p-6 rise" style="--d: 0.2s">
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-5">
                     <h2 class="font-display font-semibold text-sm tracking-wide">Matchmaking queue</h2>
                     <button v-if="queue.length" @click="confirmThen('clear-queue', clearQueue)"
                             class="btn-ghost rounded-lg px-4 py-2 text-[10px] uppercase tracking-widest"
@@ -389,10 +431,10 @@ onMounted(() => {
 
                 <div class="space-y-2">
                     <div v-for="entry in queue" :key="entry.id"
-                         class="flex items-center gap-4 rounded-xl px-4 py-3 border border-line/50">
-                        <span class="w-2 h-2 rounded-full bg-mint animate-pulse"></span>
-                        <span class="flex-1 text-sm font-medium">{{ entry.user?.name }}</span>
-                        <span class="font-mono text-xs text-gold tabular-nums">{{ entry.elo_at_join }} ELO</span>
+                         class="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl px-4 py-3 border border-line/50">
+                        <span class="w-2 h-2 rounded-full bg-mint animate-pulse shrink-0"></span>
+                        <span class="flex-1 min-w-[110px] text-sm font-medium truncate">{{ entry.user?.name }}</span>
+                        <span class="font-mono text-xs text-gold tabular-nums shrink-0">{{ entry.elo_at_join }} ELO</span>
                         <span class="font-mono text-xs text-dim">since {{ fmtDate(entry.created_at) }}</span>
                         <button @click="kick(entry)" class="btn-ghost rounded-lg px-3 py-1.5 text-[10px] uppercase tracking-widest">
                             Kick
@@ -403,7 +445,7 @@ onMounted(() => {
             </section>
 
             <!-- RANKS -->
-            <section v-if="tab === 'ranks'" class="glass rounded-3xl p-6 rise" style="--d: 0.2s">
+            <section v-if="tab === 'ranks'" class="glass rounded-3xl p-4 sm:p-6 rise" style="--d: 0.2s">
                 <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
                     <h2 class="font-display font-semibold text-sm tracking-wide">Rank ladder · MMR thresholds</h2>
                     <button @click="editRank(null); rankDraft.min_elo = (ranks.at(-1)?.min_elo ?? 0) + 200"
@@ -414,10 +456,10 @@ onMounted(() => {
 
                 <div class="space-y-2 mb-6">
                     <div v-for="(rank, i) in ranks" :key="rank.id"
-                         class="flex items-center gap-4 rounded-xl px-4 py-3 border border-line/50 hover:bg-white/[0.025] transition-colors">
+                         class="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl px-4 py-3 border border-line/50 hover:bg-white/[0.025] transition-colors">
                         <span class="w-3.5 h-3.5 rounded-full shrink-0"
                               :style="{ background: rank.color, boxShadow: `0 0 10px ${rank.color}` }"></span>
-                        <span class="flex-1 font-display font-semibold text-sm" :style="{ color: rank.color }">{{ rank.name }}</span>
+                        <span class="flex-1 min-w-[100px] font-display font-semibold text-sm truncate" :style="{ color: rank.color }">{{ rank.name }}</span>
                         <span class="font-mono text-xs text-dim tabular-nums">
                             {{ rank.min_elo }}{{ ranks[i + 1] ? ` – ${ranks[i + 1].min_elo - 1}` : '+' }} MMR
                         </span>

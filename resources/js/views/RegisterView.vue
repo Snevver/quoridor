@@ -3,6 +3,7 @@ import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import AuthShell from '@/components/AuthShell.vue';
+import GoogleButton from '@/components/ui/GoogleButton.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -47,6 +48,8 @@ const firstError = () => {
                 <span class="relative z-10">{{ auth.loading ? 'Forging…' : 'Forge my legend' }}</span>
             </button>
         </form>
+
+        <GoogleButton />
 
         <template #footer>
             Already enlisted?

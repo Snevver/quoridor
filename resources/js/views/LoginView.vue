@@ -1,13 +1,21 @@
 <script setup>
-import { reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, reactive } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import AuthShell from '@/components/AuthShell.vue';
+import GoogleButton from '@/components/ui/GoogleButton.vue';
 
 const auth = useAuthStore();
+const route = useRoute();
 const router = useRouter();
 
 const form = reactive({ email: '', password: '' });
+
+// Google callback failures land back here with ?error=…
+const oauthError = computed(() => ({
+    banned: 'This account has been suspended.',
+    google: 'Google sign-in failed — please try again.',
+}[route.query.error] ?? null));
 
 async function submit() {
     if (await auth.login(form)) {
@@ -31,12 +39,15 @@ async function submit() {
             </div>
 
             <p v-if="auth.errors.email" class="text-p2 text-sm">{{ auth.errors.email[0] }}</p>
+            <p v-else-if="oauthError" class="text-p2 text-sm">{{ oauthError }}</p>
 
             <button type="submit" :disabled="auth.loading"
                     class="btn-hero w-full rounded-xl py-3.5 text-sm text-white disabled:opacity-60">
                 <span class="relative z-10">{{ auth.loading ? 'Entering…' : 'Enter the arena' }}</span>
             </button>
         </form>
+
+        <GoogleButton />
 
         <template #footer>
             New challenger?
